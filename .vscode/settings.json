@@ -1,0 +1,11 @@
+{
+    "cSpell.words": [
+        "fastmcp"
+    ],
+    "chat.tools.terminal.autoApprove": {
+        "/^python -c \"import json; from tools import repository_tools as rt; res=rt\\.create_pull_request_thread\\.fn\\('ZEUS-Code', 6663, 'test comment from -c', '/app/Zeus\\.Api/Startup\\.cs', 20\\); print\\(json\\.dumps\\(res, indent=2\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
