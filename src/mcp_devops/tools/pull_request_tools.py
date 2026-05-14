@@ -159,7 +159,7 @@ def list_pull_request_thread_comments(
         "status": response.get("status"),
         "comments": comments,
     }
-    
+
 
 
 @mcp.tool(

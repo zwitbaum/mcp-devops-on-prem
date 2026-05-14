@@ -44,4 +44,4 @@ jobs:
         run: uv sync --group dev
 
       - name: Run tests
-        run: uv run pytest tests/
+        run: uv run pytest
