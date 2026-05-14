@@ -2,7 +2,9 @@ import urllib.parse
 import re
 from typing import Annotated
 from fastmcp.exceptions import ToolError
-from mcp_devops.shared import devops_api_get, devops_api_put, devops_api_patch, devops_api_delete, get_base_api_url, mcp
+from mcp_devops.shared import (
+    devops_api_get, devops_api_put, devops_api_patch, devops_api_delete, get_base_api_url, mcp
+)
 from requests.exceptions import HTTPError
 
 WIKI_API_PATH = "_apis/wiki/wikis"
@@ -19,7 +21,9 @@ def get_wiki_page(
 ) -> object:
     """Get wiki page by its url and return a JSON object."""
     ids = extract_identifiers(wiki_url)
-    page = get_wiki_page_details(ids["organization"], ids["project"], ids["wikiIdentifier"], ids["page_id"], include_content)
+    page = get_wiki_page_details(
+        ids["organization"], ids["project"], ids["wikiIdentifier"], ids["page_id"], include_content
+    )
     ids["path"] = page.get("path")
     ids["isParentPage"] = page.get("isParentPage")
     if include_content:
@@ -36,7 +40,11 @@ def create_wiki_page(
     project: Annotated[str, "DevOps project name."],
     wiki_id: Annotated[str, "Wiki identifier (name or ID)."],
     parent_path: Annotated[str, "Relative path of the parent wiki page, or '/' for root."],
-    title: Annotated[str, "Title of the new wiki page. If a page with the same title already exists under the parent, it will be updated."],
+    title: Annotated[
+        str,
+        # noqa: E501
+        "Title of the new wiki page. If a page with the same title already exists under the parent, it will be updated.",  # noqa: E501
+    ],
     content: str = ""
 ) -> object:
     """Create or update a wiki page as a child of the given parent page and return a metadata."""
@@ -156,7 +164,10 @@ def get_api_path(wiki_id):
 
 
 def get_wiki_page_details(organization, project, wiki_id, page_id, include_content):
-    url = f"{get_base_api_url(organization, project, get_api_path(wiki_id))}/pages/{page_id}?includeContent={str(include_content).lower()}&api-version=7.1"
+    url = (
+        f"{get_base_api_url(organization, project, get_api_path(wiki_id))}"
+        f"/pages/{page_id}?includeContent={str(include_content).lower()}&api-version=7.1"
+    )
     return devops_api_get(url)
 
 
