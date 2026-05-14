@@ -40,21 +40,19 @@ pip install uv
 
 ### Step 3: Install the MCP server
 
-**Option A - Ephemeral (no permanent install, recommended for most users):**
+**Option A - Ephemeral (recommended for most users):**
 
-`uvx` downloads and runs the server on demand directly from GitHub. Nothing is permanently installed.
+`uvx` downloads and runs the server on demand from PyPI. Nothing is permanently installed.
 
 ```
-uvx --from git+https://github.com/zwitbaum/mcp-devops-on-prem.git mcp-devops-onpremise
+uvx mcp-devops-onpremise
 ```
 
 **Option B - Permanent install:**
 
 ```
-pip install git+https://github.com/zwitbaum/mcp-devops-on-prem.git
+pip install mcp-devops-onpremise
 ```
-
-> Once the package is published on PyPI, you can use the shorter `uvx mcp-devops-onpremise` and `pip install mcp-devops-onpremise` commands instead.
 
 ### Step 4: Choose your authentication method
 
@@ -103,7 +101,11 @@ pip install pycryptodome
 
 ### Step 6: Configure your MCP client
 
-Add the server to your MCP client configuration (`mcp.json` for Claude Desktop, Cursor, Windsurf, etc.).
+For **VS Code**, use the one-click install buttons below — they pre-configure everything and prompt you for credentials:
+
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=devops-onprem&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22mcp-devops-onpremise%22%5D%2C%22env%22%3A%7B%22DEVOPS_API_URL%22%3A%22%24%7Binput%3Adevops_api_url%7D%22%2C%22DEVOPS_USERNAME%22%3A%22%24%7Binput%3Adevops_username%7D%22%2C%22DEVOPS_PASSWORD%22%3A%22%24%7Binput%3Adevops_password%7D%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22devops_api_url%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Azure%20DevOps%20API%20URL%20%28https%3A%2F%2Fserver%2Forg%2Fproject%29%22%7D%2C%7B%22id%22%3A%22devops_username%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Username%20%28DOMAIN%5C%5Cusername%29%22%7D%2C%7B%22id%22%3A%22devops_password%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Password%20or%20PAT%22%2C%22password%22%3Atrue%7D%5D%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=devops-onprem&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22mcp-devops-onpremise%22%5D%2C%22env%22%3A%7B%22DEVOPS_API_URL%22%3A%22%24%7Binput%3Adevops_api_url%7D%22%2C%22DEVOPS_USERNAME%22%3A%22%24%7Binput%3Adevops_username%7D%22%2C%22DEVOPS_PASSWORD%22%3A%22%24%7Binput%3Adevops_password%7D%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22devops_api_url%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Azure%20DevOps%20API%20URL%20%28https%3A%2F%2Fserver%2Forg%2Fproject%29%22%7D%2C%7B%22id%22%3A%22devops_username%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Username%20%28DOMAIN%5C%5Cusername%29%22%7D%2C%7B%22id%22%3A%22devops_password%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Password%20or%20PAT%22%2C%22password%22%3Atrue%7D%5D%7D&quality=insiders)
+
+For **other clients** (Claude Desktop, Cursor, Windsurf, etc.), add the server manually to your `mcp.json`.
 
 **The `DEVOPS_API_URL` must point to your full project URL:**
 ```
@@ -117,7 +119,7 @@ https://<your-devops-server>/<organization>/<project>
   "mcpServers": {
     "devops-onprem": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/zwitbaum/mcp-devops-on-prem.git", "mcp-devops-onpremise"],
+      "args": ["mcp-devops-onpremise"],
       "env": {
         "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
         "DEVOPS_USERNAME": "DOMAIN\\your-username",
@@ -135,7 +137,7 @@ https://<your-devops-server>/<organization>/<project>
   "mcpServers": {
     "devops-onprem": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/zwitbaum/mcp-devops-on-prem.git", "mcp-devops-onpremise"],
+      "args": ["mcp-devops-onpremise"],
       "env": {
         "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
         "DEVOPS_PAT": "your-personal-access-token"
@@ -163,12 +165,12 @@ Visit the [releases page on GitHub](https://github.com/zwitbaum/mcp-devops-on-pr
 
 ### Update to the latest version
 
-**If you use `uvx` (Option A):** `uvx --from git+...` always fetches the latest commit — no action needed.
+**If you use `uvx` (Option A):** `uvx` always fetches the latest version from PyPI automatically — no action needed.
 
 **If you installed permanently (Option B):**
 
 ```
-pip install --upgrade git+https://github.com/zwitbaum/mcp-devops-on-prem.git
+pip install --upgrade mcp-devops-onpremise
 ```
 
 ## Available Tools
