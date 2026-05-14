@@ -42,17 +42,19 @@ pip install uv
 
 **Option A - Ephemeral (no permanent install, recommended for most users):**
 
-`uvx` downloads and runs the server on demand. Nothing is permanently installed.
+`uvx` downloads and runs the server on demand directly from GitHub. Nothing is permanently installed.
 
 ```
-uvx mcp-devops-onpremise
+uvx --from git+https://github.com/zwitbaum/mcp-devops-on-prem.git mcp-devops-onpremise
 ```
 
 **Option B - Permanent install:**
 
 ```
-uv pip install mcp-devops-onpremise
+pip install git+https://github.com/zwitbaum/mcp-devops-on-prem.git
 ```
+
+> Once the package is published on PyPI, you can use the shorter `uvx mcp-devops-onpremise` and `pip install mcp-devops-onpremise` commands instead.
 
 ### Step 4: Choose your authentication method
 
@@ -115,7 +117,7 @@ https://<your-devops-server>/<organization>/<project>
   "mcpServers": {
     "devops-onprem": {
       "command": "uvx",
-      "args": ["mcp-devops-onpremise"],
+      "args": ["--from", "git+https://github.com/zwitbaum/mcp-devops-on-prem.git", "mcp-devops-onpremise"],
       "env": {
         "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
         "DEVOPS_USERNAME": "DOMAIN\\your-username",
@@ -133,7 +135,7 @@ https://<your-devops-server>/<organization>/<project>
   "mcpServers": {
     "devops-onprem": {
       "command": "uvx",
-      "args": ["mcp-devops-onpremise"],
+      "args": ["--from", "git+https://github.com/zwitbaum/mcp-devops-on-prem.git", "mcp-devops-onpremise"],
       "env": {
         "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
         "DEVOPS_PAT": "your-personal-access-token"
@@ -143,32 +145,30 @@ https://<your-devops-server>/<organization>/<project>
 }
 ```
 
-> Replace `uvx` with `uv run mcp-devops-onpremise` if you used Option B (permanent install) in Step 3.
+> If you used Option B (permanent install), replace `"command": "uvx"` with `"command": "mcp-devops-onpremise"` and remove the `"args"` line.
 
 ## Updating
 
 ### Check the current installed version
 
+**If you installed permanently (Option B):**
+
 ```
-uvx mcp-devops-onpremise --version
+mcp-devops-onpremise --version
 ```
 
 ### Check if a newer version is available
 
-Visit the [releases page on GitHub](https://github.com/your-org/mcp-devops-onpremise/releases) or check PyPI:
-
-```
-pip index versions mcp-devops-onpremise
-```
+Visit the [releases page on GitHub](https://github.com/zwitbaum/mcp-devops-on-prem/releases) or the [CHANGELOG](https://github.com/zwitbaum/mcp-devops-on-prem/blob/main/CHANGELOG.md).
 
 ### Update to the latest version
 
-**If you use `uvx` (Option A):** `uvx` always fetches the latest version automatically - no action needed.
+**If you use `uvx` (Option A):** `uvx --from git+...` always fetches the latest commit — no action needed.
 
 **If you installed permanently (Option B):**
 
 ```
-uv pip install --upgrade mcp-devops-onpremise
+pip install --upgrade git+https://github.com/zwitbaum/mcp-devops-on-prem.git
 ```
 
 ## Available Tools
