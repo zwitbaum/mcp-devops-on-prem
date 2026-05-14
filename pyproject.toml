@@ -5,11 +5,30 @@ description = "MCP server for on-premises Azure DevOps — browse repositories, 
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
+keywords = ["mcp", "azure-devops", "on-premise", "tfs", "devops", "ai", "llm"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Version Control",
+]
 dependencies = [
     "fastmcp>=2.0.0,<3.0.0",
     "requests>=2.31.0",
     "requests-ntlm>=1.1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/zwitbaum/mcp-devops-on-prem"
+Repository = "https://github.com/zwitbaum/mcp-devops-on-prem"
+"Bug Tracker" = "https://github.com/zwitbaum/mcp-devops-on-prem/issues"
+Changelog = "https://github.com/zwitbaum/mcp-devops-on-prem/blob/main/CHANGELOG.md"
 
 [project.scripts]
 mcp-devops-onpremise = "mcp_devops:main"
