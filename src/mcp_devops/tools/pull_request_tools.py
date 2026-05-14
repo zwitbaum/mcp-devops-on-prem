@@ -4,9 +4,9 @@ from mcp_devops.shared import (
     devops_api_url,
     mcp,
     devops_api_get,
-    devOpsApi_post,
-    devOpsApi_patch,
-    devOpsApi_delete,
+    devops_api_post,
+    devops_api_patch,
+    devops_api_delete,
     fetch_work_item,
 )
 
@@ -94,7 +94,7 @@ def create_pull_request_comment(
             "rightFileEnd": {"line": line_number, "offset": 1},
         }
 
-    response = devOpsApi_post(url, payload)
+    response = devops_api_post(url, payload)
 
     thread_id = response.get("id")
     comment_id = None
@@ -137,7 +137,7 @@ def update_pull_request_comment(
         "commentType": 1,
     }
 
-    response = devOpsApi_patch(comment_url, payload)
+    response = devops_api_patch(comment_url, payload)
     comment_id = response.get("id")
     parent_comment_id = response.get("parentCommentId")
 
@@ -165,4 +165,4 @@ def delete_pull_request_comment(
         f"{pull_request_id}/threads/{thread_id}/comments/{comment_id}?api-version=7.1"
     )
 
-    devOpsApi_delete(comment_url)
+    devops_api_delete(comment_url)
