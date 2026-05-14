@@ -173,23 +173,44 @@ uv pip install --upgrade mcp-devops-onpremise
 
 ## Available Tools
 
-| Tool | Description |
-|---|---|
-| `devops_pull_request_get` | Retrieve a pull request by ID |
-| `devops_pull_request_create_comment` | Create an inline or general PR comment |
-| `devops_pull_request_update_comment` | Update an existing PR comment |
-| `devops_pull_request_delete_comment` | Delete a PR comment |
-| `devops_repository_list` | List all repositories |
-| `devops_repository_get` | Get repository details |
-| `devops_repository_commit_changes` | List files changed in a commit |
-| `devops_repository_diffs_commits` | Diff between two commits |
-| `devops_repository_item_content` | Get raw file content at a commit |
-| `devops_get_item_content_diff` | Get line-level diff between two file versions |
-| `devops_get_work_item` | Retrieve a work item by ID |
-| `devops_wiki_page_get_by_url` | Get wiki page metadata/content by URL |
-| `devops_wiki_page_create_or_update` | Create or update a wiki page |
-| `devops_wiki_page_update` | Update an existing wiki page |
-| `devops_wiki_page_delete` | Delete a wiki page |
+### Pull Requests
+
+| Tool | Description | Read-only |
+|---|---|:---:|
+| `devops_pull_request_get` | Retrieve a pull request by ID, including linked work items and commit SHAs for diffing | ✅ |
+| `devops_pull_request_list_threads` | Returns a hierarchical list of non-deleted comment threads and their text comments | ✅ |
+| `devops_pull_request_list_thread_comments` | List non-deleted text comments in a specific thread | ✅ |
+| `devops_pull_request_create_comment` | Create a new thread with an initial comment (general or inline on a file/line) | ❌ |
+| `devops_pull_request_reply_comment` | Reply to an existing comment thread | ❌ |
+| `devops_pull_request_update_thread` | Update the status of a comment thread | ❌ |
+| `devops_pull_request_update_comment` | Update the text of an existing comment | ❌ |
+| `devops_pull_request_delete_comment` | Delete a comment from a pull request thread | ❌ |
+
+### Repositories
+
+| Tool | Description | Read-only |
+|---|---|:---:|
+| `devops_repository_list` | List all repositories in the project | ✅ |
+| `devops_repository_get` | Retrieve repository details by name or ID | ✅ |
+| `devops_repository_commit_changes` | List files changed in a specific commit | ✅ |
+| `devops_repository_diffs_commits` | Get the difference between two commits (changed file paths) | ✅ |
+| `devops_repository_item_content` | Get raw file content at a specific commit or branch | ✅ |
+| `devops_get_item_content_diff` | Get line-level textual diff of a file between two commits (added lines prefixed `+`, removed `-`) | ✅ |
+
+### Work Items
+
+| Tool | Description | Read-only |
+|---|---|:---:|
+| `devops_get_work_item` | Retrieve a single work item (PBI, bug, task) by its numeric ID | ✅ |
+
+### Wiki
+
+| Tool | Description | Read-only |
+|---|---|:---:|
+| `devops_wiki_page_get_by_url` | Get wiki page metadata (id, path) and optional content by its URL | ✅ |
+| `devops_wiki_page_create_or_update` | Create or update a wiki page under a specified parent page | ❌ |
+| `devops_wiki_page_update` | Update an existing wiki page by ID | ❌ |
+| `devops_wiki_page_delete` | Delete an existing wiki page by ID | ❌ |
 
 ## Development
 

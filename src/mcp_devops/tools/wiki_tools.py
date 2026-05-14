@@ -116,6 +116,7 @@ def update_wiki_page(
 @mcp.tool(
     name="devops_wiki_page_delete",
     description="Delete an existing wiki page.",
+    annotations={"readOnlyHint": False, "returnType": "void"},
 )
 def delete_wiki_page(
     organization: Annotated[str, "DevOps organization name."],
@@ -123,7 +124,7 @@ def delete_wiki_page(
     wiki_id: Annotated[str, "Wiki identifier (name or ID)."],
     page_id: Annotated[int, "Wiki page ID."],
     comment: Annotated[str, "Optional comment for deleting the wiki page."] = "",
-) -> object:
+) -> None:
     """Delete an existing wiki page."""
     if not isinstance(page_id, int) or page_id <= 0:
         raise ToolError("Invalid page_id. It should be a positive integer.")
@@ -132,8 +133,7 @@ def delete_wiki_page(
     if comment:
         url += "&" + urllib.parse.urlencode({"comment": comment})
 
-    result = devops_api_delete(url)
-    return result
+    devops_api_delete(url)
 
 
 def extract_identifiers(wiki_url):
