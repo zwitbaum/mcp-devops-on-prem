@@ -2,7 +2,7 @@ import urllib.parse
 import re
 from typing import Annotated
 from fastmcp.exceptions import ToolError
-from mcp_devops.shared import devops_api_get, devOpsApi_put, devOpsApi_patch, devOpsApi_delete, get_base_api_url, mcp
+from mcp_devops.shared import devops_api_get, devops_api_put, devops_api_patch, devops_api_delete, get_base_api_url, mcp
 from requests.exceptions import HTTPError
 
 WIKI_API_PATH = "_apis/wiki/wikis"
@@ -68,7 +68,7 @@ def create_wiki_page(
         url += f"&versionDescriptor.versionType=branch&versionDescriptor.version={version}"
         payload["comment"] = f"Create/Update page: {title}"
 
-    result = devOpsApi_put(url, payload, extra_headers=extra_headers)
+    result = devops_api_put(url, payload, extra_headers=extra_headers)
     return {
         "path": result.get("path"),
         "order": result.get("order"),
@@ -105,7 +105,7 @@ def update_wiki_page(
         raise ToolError(f"Page version cannot be retrieved. Check parameter and connection. Details: {str(e)}")
 
     payload = {"content": content}
-    result = devOpsApi_patch(url, payload, extra_headers=extra_headers)
+    result = devops_api_patch(url, payload, extra_headers=extra_headers)
     return {
         "path": result.get("path"),
         "order": result.get("order"),
@@ -132,7 +132,7 @@ def delete_wiki_page(
     if comment:
         url += "&" + urllib.parse.urlencode({"comment": comment})
 
-    result = devOpsApi_delete(url)
+    result = devops_api_delete(url)
     return result
 
 

@@ -2,9 +2,13 @@ import os
 from urllib.parse import urlparse
 
 import requests
+from dotenv import load_dotenv
 from fastmcp import FastMCP
 from requests.auth import HTTPBasicAuth
 from requests_ntlm import HttpNtlmAuth
+
+# Load .env from repo root (no-op if file doesn't exist)
+load_dotenv()
 
 # Single connection URL: https://<server>/<organization>/<project>
 # Keep the raw value (spaces allowed) — requests percent-encodes paths internally.
