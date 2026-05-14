@@ -109,7 +109,7 @@ def devops_api_patch(url, payload, extra_headers=None, return_response=False):
 def devops_api_delete(url):
     headers, auth = _get_auth_headers_and_kwargs()
     response = requests.delete(url, headers=headers, auth=auth, timeout=DEFAULT_TIMEOUT)
-    return response.json()
+    response.raise_for_status()    
 
 
 def fetch_work_item(url):
