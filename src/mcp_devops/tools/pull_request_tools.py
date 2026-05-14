@@ -25,10 +25,7 @@ def get_pull_request(
     pull_request_id: Annotated[int, "The ID of the pull request to retrieve."],
 ) -> object:
     """Fetch a single pull request by its integer ID."""
-    url = (
-        f"{devops_api_url}/_apis/git/repositories/{repository_id}"
-        f"/pullRequests/{pull_request_id}"
-    )
+    url = f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests/{pull_request_id}"
     data = devops_api_get(url)
 
     # create a simplified result object
@@ -68,10 +65,7 @@ def list_pull_request_threads(
     pull_request_id: Annotated[int, "The ID of the pull request."],
 ) -> object:
     """List all comment threads for a given pull request."""
-    url = (
-        f"{devops_api_url}/_apis/git/repositories/{repository_id}"
-        f"/pullRequests/{pull_request_id}/threads"
-    )
+    url = f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests/{pull_request_id}/threads"
     response = devops_api_get(url)
 
     threads = []
@@ -102,15 +96,17 @@ def list_pull_request_threads(
                 continue
             if comment.get("isDeleted", False):
                 continue
-            comments.append({
-                "comment_id": comment.get("id"),
-                "parent_comment_id": comment.get("parentCommentId"),
-                "author": (comment.get("author") or {}).get("displayName"),
-                "content": comment.get("content"),
-                "published": comment.get("publishedDate"),
-                "last_updated": comment.get("lastUpdatedDate"),
-                "last_content_updated": comment.get("lastContentUpdatedDate"),
-            })
+            comments.append(
+                {
+                    "comment_id": comment.get("id"),
+                    "parent_comment_id": comment.get("parentCommentId"),
+                    "author": (comment.get("author") or {}).get("displayName"),
+                    "content": comment.get("content"),
+                    "published": comment.get("publishedDate"),
+                    "last_updated": comment.get("lastUpdatedDate"),
+                    "last_content_updated": comment.get("lastContentUpdatedDate"),
+                }
+            )
         if not comments:
             continue
         thread_entry["comments"] = comments
@@ -130,10 +126,7 @@ def list_pull_request_thread_comments(
     thread_id: Annotated[int, "The ID of the thread to retrieve."],
 ) -> object:
     """Get details of a specific pull request thread."""
-    url = (
-        f"{devops_api_url}/_apis/git/repositories/{repository_id}"
-        f"/pullRequests/{pull_request_id}/threads/{thread_id}"
-    )
+    url = f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests/{pull_request_id}/threads/{thread_id}"
     response = devops_api_get(url)
 
     comments = []
@@ -142,15 +135,17 @@ def list_pull_request_thread_comments(
             continue
         if comment.get("isDeleted", False):
             continue
-        comments.append({
-            "comment_id": comment.get("id"),
-            "parent_comment_id": comment.get("parentCommentId"),
-            "author": (comment.get("author") or {}).get("displayName"),
-            "content": comment.get("content"),
-            "published": comment.get("publishedDate"),
-            "last_updated": comment.get("lastUpdatedDate"),
-            "last_content_updated": comment.get("lastContentUpdatedDate"),
-        })
+        comments.append(
+            {
+                "comment_id": comment.get("id"),
+                "parent_comment_id": comment.get("parentCommentId"),
+                "author": (comment.get("author") or {}).get("displayName"),
+                "content": comment.get("content"),
+                "published": comment.get("publishedDate"),
+                "last_updated": comment.get("lastUpdatedDate"),
+                "last_content_updated": comment.get("lastContentUpdatedDate"),
+            }
+        )
 
     return {
         "thread_id": response.get("id"),
@@ -159,7 +154,6 @@ def list_pull_request_thread_comments(
         "status": response.get("status"),
         "comments": comments,
     }
-
 
 
 @mcp.tool(
@@ -172,9 +166,7 @@ def create_pull_request_comment(
     pull_request_id: Annotated[int, "Pull request ID."],
     comment_content: Annotated[str, "The text content or markdown of the comment."],
     file_path: Annotated[str, "Optional file path for an inline comment."] = None,
-    line_number: Annotated[
-        int, "Optional 1-based line number for an inline comment."
-    ] = None,
+    line_number: Annotated[int, "Optional 1-based line number for an inline comment."] = None,
 ) -> object:
     """Create a pull request thread (comment) on the specified PR."""
     url = (
