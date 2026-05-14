@@ -2,9 +2,7 @@ import urllib.parse
 import re
 from typing import Annotated
 from fastmcp.exceptions import ToolError
-from mcp_devops.shared import (
-    devops_api_get, devops_api_put, devops_api_patch, devops_api_delete, get_base_api_url, mcp
-)
+from mcp_devops.shared import devops_api_get, devops_api_put, devops_api_patch, devops_api_delete, get_base_api_url, mcp
 from requests.exceptions import HTTPError
 
 WIKI_API_PATH = "_apis/wiki/wikis"
@@ -15,10 +13,7 @@ WIKI_INFO_CACHE = {}
     name="devops_wiki_page_get_by_url",
     description="Retrieves metadata (incl. id, path) and/or content of a wiki page using its URL.",
 )
-def get_wiki_page(
-    wiki_url: str,
-    include_content: bool = False
-) -> object:
+def get_wiki_page(wiki_url: str, include_content: bool = False) -> object:
     """Get wiki page by its url and return a JSON object."""
     ids = extract_identifiers(wiki_url)
     page = get_wiki_page_details(
@@ -45,7 +40,7 @@ def create_wiki_page(
         # noqa: E501
         "Title of the new wiki page. If a page with the same title already exists under the parent, it will be updated.",  # noqa: E501
     ],
-    content: str = ""
+    content: str = "",
 ) -> object:
     """Create or update a wiki page as a child of the given parent page and return a metadata."""
     subpage_path = f"{parent_path}/{title}"
@@ -149,13 +144,15 @@ def extract_identifiers(wiki_url):
     match = re.search(pattern, wiki_url)
 
     if not match:
-        raise ToolError("Invalid wiki URL format. Expected format: https://{devops}/{organization}/{project}/_wiki/wikis/{wikiIdentifier}/{page_id}/...")
+        raise ToolError(
+            "Invalid wiki URL format. Expected format: https://{devops}/{organization}/{project}/_wiki/wikis/{wikiIdentifier}/{page_id}/..."
+        )
 
     return {
         "organization": urllib.parse.unquote(match.group(1)),
         "project": urllib.parse.unquote(match.group(2)),
         "wikiIdentifier": urllib.parse.unquote(match.group(3)),
-        "page_id": match.group(4)
+        "page_id": match.group(4),
     }
 
 

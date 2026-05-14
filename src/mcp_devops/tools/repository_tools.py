@@ -41,10 +41,7 @@ def get_commit_changes(
 ) -> object:
     """Return the list of changes in this commit."""
     _validate_commit_sha(commit_id)
-    url = (
-        f"{devops_api_url}/_apis/git/repositories/{repository_id}/commits"
-        f"/{commit_id}/changes"
-    )
+    url = f"{devops_api_url}/_apis/git/repositories/{repository_id}/commits/{commit_id}/changes"
     return devops_api_get(url)
 
 
@@ -68,15 +65,15 @@ def compare_commits(
     )
     data = devops_api_get(url)
     return {
-        "changeCounts": data['changeCounts'],
+        "changeCounts": data["changeCounts"],
         "changes": [
             {
                 "path": item["item"].get("path", ""),
                 "isFolder": item["item"].get("isFolder", False),
-                "changeType": item.get("changeType", "")
+                "changeType": item.get("changeType", ""),
             }
             for item in data.get("changes", [])
-        ]
+        ],
     }
 
 
@@ -96,7 +93,7 @@ def get_item_content(
     or `repo_get_pull_request_by_id` to determine commit SHAs when needed.
     """
     data = _request_item_content(repository_id, path, version)
-    return data.get('content', '')
+    return data.get("content", "")
 
 
 @mcp.tool(
@@ -202,9 +199,7 @@ def get_item_content_diff(  # noqa: C901 - readability prioritized for difflib l
         else:
             change_type = "unchanged"
 
-    changes_text = (
-        "" if change_type == "white spaces only" else "\n".join(meaningful_changes)
-    )
+    changes_text = "" if change_type == "white spaces only" else "\n".join(meaningful_changes)
 
     return {
         "path": path,
@@ -219,11 +214,7 @@ def get_item_content_diff(  # noqa: C901 - readability prioritized for difflib l
 
 def _validate_commit_sha(sha: str) -> None:
     """Raise ToolError early if sha is not a valid 40-char hex commit SHA."""
-    if not (
-        isinstance(sha, str)
-        and len(sha) == 40
-        and all(c in "0123456789abcdefABCDEF" for c in sha)
-    ):
+    if not (isinstance(sha, str) and len(sha) == 40 and all(c in "0123456789abcdefABCDEF" for c in sha)):
         raise ToolError(
             f"Invalid commit SHA: '{sha}'. Expected a 40-character hexadecimal string. "
             "Use devops_pull_request_get to obtain lastMergeSourceCommit / lastMergeTargetCommit."

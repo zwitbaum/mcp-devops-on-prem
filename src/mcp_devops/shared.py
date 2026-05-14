@@ -17,10 +17,7 @@ devops_api_url = os.getenv("DEVOPS_API_URL", "")
 # Derive the base server URL (scheme + host only) for wiki tools that receive
 # organisation/project as explicit parameters.
 _parsed = urlparse(devops_api_url)
-devops_url = (
-    f"{_parsed.scheme}://{_parsed.netloc}"
-    if _parsed.netloc else devops_api_url
-)
+devops_url = f"{_parsed.scheme}://{_parsed.netloc}" if _parsed.netloc else devops_api_url
 
 DEFAULT_TIMEOUT = 30
 
@@ -46,6 +43,7 @@ __doc__ = (
     "then use devops_repository_diffs_commits with the returned commit SHAs to see which "
     "files changed, then call devops_get_item_content_diff per file to read the actual diff."
 )
+
 
 def get_base_api_url(organization, project, api_path):
     # Raw strings — requests will encode any spaces/special chars in the path.
@@ -80,9 +78,7 @@ def devops_api_post(url, payload, extra_headers=None, return_response=False):
     headers, auth = _get_auth_headers_and_kwargs({"Content-Type": "application/json"})
     if extra_headers:
         headers.update(extra_headers)
-    response = requests.post(
-        url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT
-    )
+    response = requests.post(url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT)
     return response if return_response else response.json()
 
 
@@ -90,9 +86,7 @@ def devops_api_put(url, payload, extra_headers=None, return_response=False):
     headers, auth = _get_auth_headers_and_kwargs({"Content-Type": "application/json"})
     if extra_headers:
         headers.update(extra_headers)
-    response = requests.put(
-        url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT
-    )
+    response = requests.put(url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT)
     return response if return_response else response.json()
 
 
@@ -100,9 +94,7 @@ def devops_api_patch(url, payload, extra_headers=None, return_response=False):
     headers, auth = _get_auth_headers_and_kwargs({"Content-Type": "application/json"})
     if extra_headers:
         headers.update(extra_headers)
-    response = requests.patch(
-        url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT
-    )
+    response = requests.patch(url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT)
     return response if return_response else response.json()
 
 
