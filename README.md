@@ -1,6 +1,23 @@
+<div align="center">
+
 # MCP DevOps On-Premise
 
 Model Context Protocol [MCP](https://modelcontextprotocol.io/) server for **on-premises Azure DevOps** that lets AI assistants browse repositories, review pull requests, manage work items, and interact with wikis.
+
+[![License: MIT](https://img.shields.io/badge/license-Apache%20License%202.0-blue)](https://opensource.org/licenses/apache-2.0)
+[![PyPI - Version](https://img.shields.io/pypi/v/mcp-devops-onpremise)](https://pypi.org/project/mcp-devops-onpremise)
+
+<div class="toc">
+  <a href="#overview">Overview</a> •  
+  <a href="#getting-started">Getting Started</a> •
+  <a href="#installation-guide">Installation Guide</a> •
+  <a href="#updating">Updating</a> •
+  <a href="#available-tools">Available Tools</a> •
+  <a href="#development">Development</a>
+</div>
+
+</div>
+
 
 ## Overview
 
@@ -17,18 +34,230 @@ This MCP server closes that gap and enables smooth integration with on-premise D
 - Helps keep and track project documentation alongside code changes.
 - Automates common tasks such as work item management and code review processes.
 
-## Installation & Setup
+## Getting Started
 
-### Step 1: Install Python 3.10 or later
+### Quick Install
+
+**Prerequisites:** [Python 3.10+](#prerequisites) and [uv](#uv) are required. If not yet installed, see [Prerequisites](#prerequisites) in the Installation Guide below.
+
+Click one of the buttons below to install directly in your IDE — you will be prompted for credentials:
+
+[![Install in VS Code](https://img.shields.io/badge/Install_in-VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=devops-onprem&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22mcp-devops-onpremise%22%5D%2C%22env%22%3A%7B%22DEVOPS_API_URL%22%3A%22%24%7Binput%3Adevops_api_url%7D%22%2C%22DEVOPS_USERNAME%22%3A%22%24%7Binput%3Adevops_username%7D%22%2C%22DEVOPS_PASSWORD%22%3A%22%24%7Binput%3Adevops_password%7D%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22devops_api_url%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Azure%20DevOps%20API%20URL%20%28https%3A%2F%2Fserver%2Forg%2Fproject%29%22%7D%2C%7B%22id%22%3A%22devops_username%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Username%20%28DOMAIN%5C%5Cusername%29%22%7D%2C%7B%22id%22%3A%22devops_password%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Password%20or%20PAT%22%2C%22password%22%3Atrue%7D%5D%7D)
+[![Install in VS Code Insiders](https://img.shields.io/badge/Install_in-VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=devops-onprem&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22mcp-devops-onpremise%22%5D%2C%22env%22%3A%7B%22DEVOPS_API_URL%22%3A%22%24%7Binput%3Adevops_api_url%7D%22%2C%22DEVOPS_USERNAME%22%3A%22%24%7Binput%3Adevops_username%7D%22%2C%22DEVOPS_PASSWORD%22%3A%22%24%7Binput%3Adevops_password%7D%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22devops_api_url%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Azure%20DevOps%20API%20URL%20%28https%3A%2F%2Fserver%2Forg%2Fproject%29%22%7D%2C%7B%22id%22%3A%22devops_username%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Username%20%28DOMAIN%5C%5Cusername%29%22%7D%2C%7B%22id%22%3A%22devops_password%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Password%20or%20PAT%22%2C%22password%22%3Atrue%7D%5D%7D&quality=insiders)
+[![Install in Cursor](https://img.shields.io/badge/Install_in-Cursor-000000?style=flat-square&logoColor=white)](https://cursor.com/en/install-mcp?name=devops-onprem&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJtY3AtZGV2b3BzLW9ucHJlbWlzZSJdLCJlbnYiOnt9fQ==)
+
+For other platforms, see [Manual Installation](#manual-installation) below.
+
+
+### Manual Installation
+
+> For the server command and environment variable settings used in the steps below, see [Configuration](#configuration) in the Installation Guide.
+
+<details>
+<summary>VS Code</summary>
+
+Follow the MCP install [guide](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server), use the [configuration](#configuration) below. 
+
+After installation, the devops-onprem MCP server will be available for use with your GitHub Copilot agent in VS Code.
+</details>
+
+<details>
+<summary>VS Code Insiders</summary>
+
+Follow the MCP install [guide](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server), use the [configuration](#configuration) below.
+
+After installation, the devops-onprem MCP server will be available for use with your GitHub Copilot agent in VS Code Insiders.
+</details>
+
+<details>
+<summary>Visual Studio</summary>
+
+1. Open Visual Studio
+2. Navigate to the GitHub Copilot Chat window
+3. Click the tools icon (🛠️) in the chat toolbar
+4. Click the + "Add Custom MCP Server" button to open the "Configure MCP server" dialog
+5. Fill in the configuration:
+   - **Server ID**: `devops-onprem`
+   - **Type**: Select `stdio` from the dropdown
+   - **Command (with optional arguments)**: `uvx mcp-devops-onpremise`
+   - **Envisronment Variables**: add like described in the Configuration chapter.
+6. Click "Save" to add the server
+
+For detailed instructions, see the [Visual Studio MCP documentation](https://learn.microsoft.com/visualstudio/ide/mcp-servers).
+</details>
+
+<details>
+<summary>Cursor</summary>
+
+Go to `Cursor Settings` -> `MCP` -> `Add new MCP Server`. Name to your liking, use `command` type with the command from the [configuration](#configuration) below. You can also verify config or add command like arguments via clicking `Edit`.
+</details>
+
+<details>
+<summary>Goose</summary>
+
+Go to `Advanced settings` -> `Extensions` -> `Add custom extension`. Name to your liking, use type `STDIO`, and set the `command` from the [configuration](#configuration) below. Click "Add Extension".
+</details>
+
+<details>
+<summary>LM Studio</summary>
+
+Go to `Program` in the right sidebar -> `Install` -> `Edit mcp.json`. Use the [configuration](#configuration) below.
+</details>
+
+<details>
+<summary>Amp</summary>
+
+Add via the Amp VS Code extension settings screen or by updating your settings.json file:
+
+```json
+"amp.mcpServers": 
+  "devops-onprem": {
+    "command": "uvx",
+    "args": [
+      "mcp-devops-onpremise"
+    ],
+    "env": {}
+  }
+
+```
+
+**Amp CLI Setup:**
+
+Add via the `amp mcp add` command below:
+
+```bash
+amp mcp add devops-onprem -- uvx mcp-devops-onpremise
+```
+</details>
+
+<details>
+<summary>Claude Code</summary>
+
+Use the Claude Code CLI to add the devops-onprem MCP server:
+
+```bash
+claude mcp add devops-onprem uvx mcp-devops-onpremise
+```
+</details>
+
+<details>
+<summary>Claude Desktop</summary>
+
+Follow the MCP install [guide](https://modelcontextprotocol.io/quickstart/user), use the [configuration](#configuration) below.
+</details>
+
+<details>
+<summary>Codex</summary>
+
+Create or edit the configuration file `~/.codex/config.toml` and add:
+
+```toml
+[mcp_servers.devops-onprem]
+command = "uvx"
+args = ["mcp-devops-onpremise"]
+```
+
+For more information, see the [Codex MCP documentation](https://github.com/openai/codex/blob/main/codex-rs/config.md#mcp_servers).
+</details>
+
+<details>
+<summary>Gemini CLI</summary>
+
+Follow the MCP install [guide](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md#configure-the-mcp-server-in-settingsjson), use the [configuration](#configuration) below.
+</details>
+
+<details>
+<summary>OpenCode</summary>
+
+Follow the MCP Servers [documentation](https://opencode.ai/docs/mcp-servers/). For example in `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "devops-onprem": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "mcp-devops-onpremise"
+      ],
+      "enabled": true
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary>Qodo Gen</summary>
+
+Open [Qodo Gen](https://docs.qodo.ai/qodo-documentation/qodo-gen) chat panel in VSCode or IntelliJ → Connect more tools → + Add new MCP → Paste the [configuration](#configuration) below.
+
+Click Save.
+</details>
+
+<details>
+<summary>Warp</summary>
+
+Go to `Settings` -> `AI` -> `Manage MCP Servers` -> `+ Add` to [add an MCP Server](https://docs.warp.dev/knowledge-and-collaboration/mcp#adding-an-mcp-server). Use the [configuration](#configuration) below.
+
+Alternatively, use the slash command `/add-mcp` in the Warp prompt and paste the [configuration](#configuration) below.
+</details>
+
+<details>
+<summary>Windsurf</summary>
+
+Follow Windsurf MCP [documentation](https://docs.windsurf.com/windsurf/cascade/mcp). Use the [configuration](#configuration) below.
+</details>
+
+<details>
+<summary>GitHub Copilot CLI</summary>
+
+GitHub Copilot CLI supports adding MCP servers interactively and through a config file.
+
+#### Option 1: Interactive setup with `/mcp add`
+
+1. Open GitHub Copilot CLI in interactive mode.
+2. Run `/mcp add`.
+3. Enter **Server Name**: `devops-onprem`.
+4. Choose **Server Type**:
+   - `STDIO` for command-based servers
+   - `HTTP` for remote servers
+5. Fill in command/url settings from the [configuration](#configuration) below and set **Tools** to `*`.
+6. Press `Ctrl+S` to save.
+
+#### Option 2: Edit `~/.copilot/mcp-config.json`
+
+Use the [configuration](#configuration) below.
+
+For more information, see the [GitHub Copilot CLI MCP documentation](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers).
+</details>
+
+<details>
+<summary>GitHub Copilot Coding Agent</summary>
+
+GitHub Copilot Coding Agent can use MCP servers to extend its capabilities. Use the [configuration](#configuration) below — add it to your repository settings under **Copilot > Coding agent**.
+
+Add this configuration to your repository settings under **Copilot > Coding agent**. The `"tools": ["*"]` setting enables all available tools from the MCP server.
+
+For more information, see the [GitHub Copilot Coding Agent MCP documentation](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/extend-coding-agent-with-mcp).
+</details>
+
+
+## Installation Guide
+
+### Prerequisites
+
+#### Python 3.10 or later
 
 If Python is not installed on your machine, download it from [python.org](https://www.python.org/downloads/).
 
 > **Windows:** Check **"Add Python to PATH"** during installation.  
-> `pip` is included with Python - no separate install needed.
+> `pip` is included with Python — no separate install needed.
 
-### Step 2: Install `uv`
+#### uv
 
-`uv` is a fast Python package manager used to run and install the server.
+`uv` is a fast Python package manager that powers the one-click installs and the ephemeral server launch.
 
 > **Windows users:** Open **Command Prompt** (`cmd`) or **PowerShell** to run all commands in this guide.
 
@@ -38,27 +267,27 @@ pip install uv
 
 > More info: [uv documentation](https://github.com/astral-sh/uv)
 
-### Step 3: Install the MCP server
+### Standalone Server Installation (optional)
 
-**Option A - Ephemeral (recommended for most users):**
+In most cases you do not need to install the server separately — the IDE integrations in [Getting Started](#getting-started) handle this automatically via `uvx`. If you need to run or test the server outside an IDE:
 
-`uvx` downloads and runs the server on demand from PyPI. Nothing is permanently installed.
+**Ephemeral (recommended, no permanent install):**
 
 ```
 uvx mcp-devops-onpremise
 ```
 
-**Option B - Permanent install:**
+**Permanent install:**
 
 ```
 pip install mcp-devops-onpremise
 ```
 
-### Step 4: Choose your authentication method
+### Authentication
 
 The server supports three authentication methods. **Start with NTLM (username + password) if you connect via VPN or are on a corporate network. Use PAT if it is available and works in your environment.**
 
-#### Option 1: Username + Password (NTLM - most common for on-prem/VPN)
+#### Option 1: Username + Password (NTLM — most common for on-prem/VPN)
 
 Typical for on-premises Azure DevOps Server accessed via VPN or Windows Auth.
 
@@ -81,7 +310,7 @@ See: [Microsoft docs - Create a PAT](https://learn.microsoft.com/en-us/azure/dev
 
 #### Option 3: OAuth Bearer Token (advanced / CI/CD only)
 
-OAuth Bearer tokens work only if your on-prem Azure DevOps Server has OAuth 2.0 configured - this is uncommon in standard on-prem setups. It is mainly useful for Azure DevOps Services (cloud) or automated pipelines that receive short-lived tokens from an identity provider.
+OAuth Bearer tokens work only if your on-prem Azure DevOps Server has OAuth 2.0 configured — uncommon in standard on-prem setups. Mainly useful for Azure DevOps Services (cloud) or automated pipelines that receive short-lived tokens from an identity provider.
 
 | Variable | Value |
 |---|---|
@@ -89,25 +318,19 @@ OAuth Bearer tokens work only if your on-prem Azure DevOps Server has OAuth 2.0 
 
 > If you are unsure whether OAuth is available, use NTLM or PAT instead.
 
-### Step 5: Install MD4 support (required for NTLM)
+### MD4 Support (NTLM only, optional)
 
-NTLM authentication requires the MD4 hash algorithm. Install the `pycryptodome` package to provide it:
+NTLM authentication requires the MD4 hash algorithm, which is not included in all Python environments. If you encounter an MD4-related error, install `pycryptodome`:
 
 ```
 pip install pycryptodome
 ```
 
-> This step is only needed for NTLM. If you use PAT or OAuth, you can skip it.
+> Skip this step if you use PAT or OAuth.
 
-### Step 6: Configure your MCP client
+### Configuration
 
-For **VS Code**, use the one-click install buttons below — they pre-configure everything and prompt you for credentials:
-
-[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=devops-onprem&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22mcp-devops-onpremise%22%5D%2C%22env%22%3A%7B%22DEVOPS_API_URL%22%3A%22%24%7Binput%3Adevops_api_url%7D%22%2C%22DEVOPS_USERNAME%22%3A%22%24%7Binput%3Adevops_username%7D%22%2C%22DEVOPS_PASSWORD%22%3A%22%24%7Binput%3Adevops_password%7D%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22devops_api_url%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Azure%20DevOps%20API%20URL%20%28https%3A%2F%2Fserver%2Forg%2Fproject%29%22%7D%2C%7B%22id%22%3A%22devops_username%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Username%20%28DOMAIN%5C%5Cusername%29%22%7D%2C%7B%22id%22%3A%22devops_password%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Password%20or%20PAT%22%2C%22password%22%3Atrue%7D%5D%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=devops-onprem&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22mcp-devops-onpremise%22%5D%2C%22env%22%3A%7B%22DEVOPS_API_URL%22%3A%22%24%7Binput%3Adevops_api_url%7D%22%2C%22DEVOPS_USERNAME%22%3A%22%24%7Binput%3Adevops_username%7D%22%2C%22DEVOPS_PASSWORD%22%3A%22%24%7Binput%3Adevops_password%7D%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22devops_api_url%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Azure%20DevOps%20API%20URL%20%28https%3A%2F%2Fserver%2Forg%2Fproject%29%22%7D%2C%7B%22id%22%3A%22devops_username%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Username%20%28DOMAIN%5C%5Cusername%29%22%7D%2C%7B%22id%22%3A%22devops_password%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Password%20or%20PAT%22%2C%22password%22%3Atrue%7D%5D%7D&quality=insiders)
-
-For **other clients** (Claude Desktop, Cursor, Windsurf, etc.), add the server manually to your `mcp.json`.
-
-**The `DEVOPS_API_URL` must point to your full project URL:**
+The `DEVOPS_API_URL` must point to your full project URL:
 ```
 https://<your-devops-server>/<organization>/<project>
 ```
@@ -147,7 +370,7 @@ https://<your-devops-server>/<organization>/<project>
 }
 ```
 
-> If you used Option B (permanent install), replace `"command": "uvx"` with `"command": "mcp-devops-onpremise"` and remove the `"args"` line.
+> If you used a permanent install, replace `"command": "uvx"` with `"command": "mcp-devops-onpremise"` and remove the `"args"` line.
 
 ## Updating
 
