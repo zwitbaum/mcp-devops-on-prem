@@ -35,7 +35,8 @@ __doc__ = (
     "- devops_repository_diffs_commits: diff two commits (returns changed file paths)\n"
     "- devops_repository_item_content: get the raw content of a file at a specific commit\n"
     "- devops_get_item_content_diff: get a line-level text diff of a file between two commits\n"
-    "- devops_get_work_item: retrieve a work item (PBI, bug, task) by numeric ID\n"
+    "- devops_work_item_get: retrieve a work item (PBI, bug, task, etc.) by ID\n"
+    "- devops_work_item_attachment_get: download a work item attachment by ID\n"
     "- devops_wiki_page_get_by_url: get wiki page metadata and content by its URL\n"
     "- devops_wiki_page_update: update an existing wiki page by ID\n"
     "- devops_wiki_page_delete: delete a wiki page by ID\n\n"
@@ -104,12 +105,45 @@ def devops_api_delete(url):
     response.raise_for_status()
 
 
+_EXPAND_MAP = {"none": 0, "relations": 1, "fields": 2, "links": 3, "all": 4}
+
+
 def fetch_work_item(url):
     wit_json = devops_api_get(url)
-    return {
+    result = {
         "id": wit_json.get("id"),
         "fields": wit_json.get("fields"),
     }
+    if wit_json.get("relations") is not None:
+        result["relations"] = wit_json.get("relations")
+    if wit_json.get("_links") is not None:
+        result["_links"] = wit_json.get("_links")
+    return result
+
+
+def devops_api_get_binary_stream(url):
+    """Return a streaming response for raw binary content from a DevOps endpoint."""
+    headers, auth = _get_auth_headers_and_kwargs({"Accept": "*/*"})
+    response = requests.get(url, headers=headers, auth=auth, timeout=DEFAULT_TIMEOUT, stream=True)
+    response.raise_for_status()
+    content_type = response.headers.get("Content-Type", "")
+    if "text/html" in content_type or "application/json" in content_type:
+        # Drain and surface the error body instead of silently writing it as a file
+        body = response.content.decode("utf-8", errors="replace")[:500]
+        raise ValueError(
+            f"Server returned unexpected Content-Type '{content_type}' — likely an error page. Body preview: {body}"
+        )
+    return response
+
+
+def devops_api_get_binary(url):
+    """Fetch raw binary content from a DevOps endpoint."""
+    response = devops_api_get_binary_stream(url)
+    chunks = []
+    for chunk in response.iter_content(chunk_size=8192):
+        if chunk:
+            chunks.append(chunk)
+    return b"".join(chunks)
 
 
 # Shared FastMCP instance for the application
@@ -135,8 +169,10 @@ mcp = FastMCP(
         "specific commit\n"
         "- devops_get_item_content_diff: get a line-level text diff of a file "
         "between two commits\n"
-        "- devops_get_work_item: retrieve a work item (PBI, bug, task) by "
-        "numeric ID\n"
+        "- devops_work_item_get: retrieve a work item (PBI, bug, task) by "
+        "numeric ID; returns key fields, attachments, and linked items\n"
+        "- devops_work_item_attachment_get: download a work item attachment by "
+        "GUID, returns base64 content or saves to a local path\n"
         "- devops_wiki_page_get_by_url: get wiki page metadata and content by "
         "its URL\n"
         "- devops_wiki_page_update: update an existing wiki page by ID\n"

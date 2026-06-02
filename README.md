@@ -426,7 +426,8 @@ pip install --upgrade mcp-devops-onpremise
 
 | Tool | Description | Read-only |
 |---|---|:---:|
-| `devops_get_work_item` | Retrieve a single work item (PBI, bug, task) by its numeric ID | ✅ |
+| `devops_work_item_get` | Retrieve a work item (PBI, bug, task) by numeric ID. Returns a compact object with key fields, attachments (files and inline images), and linked items (work items, pull requests, commits) | ✅ |
+| `devops_work_item_attachment_get` | Download a work item attachment by its GUID, either saving locally or returning base64-encoded content | ✅ |
 
 ### Wiki
 
