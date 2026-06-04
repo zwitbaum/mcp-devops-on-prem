@@ -11,6 +11,11 @@ from mcp_devops.shared import (
 )
 
 
+def _ensure_rel_file_path(file_path: str | None) -> str | None:
+    """Ensure file path starts with a slash, as required by the Azure DevOps API."""
+    return f"/{file_path}" if file_path and not file_path.startswith("/") else file_path
+
+
 @mcp.tool(
     name="devops_pull_request_get",
     description=(
@@ -165,7 +170,7 @@ def create_pull_request_comment(
     repository_id: Annotated[str, "Repository name or ID."],
     pull_request_id: Annotated[int, "Pull request ID."],
     comment_content: Annotated[str, "The text content or markdown of the comment."],
-    file_path: Annotated[str, "Optional file path for an inline comment."] = None,
+    file_path: Annotated[str, "File path relative to the root of the repository."] = None,
     line_number: Annotated[int, "Optional 1-based line number for an inline comment."] = None,
 ) -> object:
     """Create a pull request thread (comment) on the specified PR."""
@@ -186,6 +191,7 @@ def create_pull_request_comment(
     }
 
     if file_path and line_number is not None and line_number > 0:
+        file_path = _ensure_rel_file_path(file_path)
         payload["threadContext"] = {
             "filePath": file_path,
             "rightFileStart": {"line": line_number, "offset": 1},
