@@ -444,8 +444,7 @@ def delete_work_item(
 @mcp.tool(
     name="devops_work_item_undelete",
     description=(
-        "Restore a work item from the Recycle Bin by ID. "
-        "Only works for items deleted without the destroy flag."
+        "Restore a work item from the Recycle Bin by ID. Only works for items deleted without the destroy flag."
     ),
     annotations={"readOnlyHint": False},
 )
