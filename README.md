@@ -428,6 +428,17 @@ pip install --upgrade mcp-devops-onpremise
 |---|---|:---:|
 | `devops_work_item_get` | Retrieve a work item (PBI, bug, task) by numeric ID. Returns a compact object with key fields, attachments (files and inline images), and linked items (work items, pull requests, commits) | ✅ |
 | `devops_work_item_attachment_get` | Download a work item attachment by its GUID, either saving locally or returning base64-encoded content | ✅ |
+| `devops_work_item_type_get` | Get the definition of a work item type by name (e.g. `Bug`, `User Story`) | ✅ |
+| `devops_work_item_create` | Create a new work item with typed fields; Html is the default format | ❌ |
+| `devops_work_item_update` | Update fields on a work item using JSON Patch (add / replace / remove) | ❌ |
+| `devops_work_item_delete` | Delete a work item — moves to Recycle Bin by default; use `destroy=True` for permanent deletion (requires project permission) | ❌ |
+| `devops_work_item_undelete` | Restore a soft-deleted work item from the Recycle Bin | ❌ |
+| `devops_work_item_link_update` | Add or remove a relation link between two work items (parent, child, related, successor, predecessor, etc.) | ❌ |
+| `devops_work_item_artifact_link_update` | Add or remove an artifact link (Pull Request, Build, Commit, Branch, Changeset) on a work item | ❌ |
+| `devops_work_item_comment_list` | List comments on a work item with configurable page size and format | ✅ |
+| `devops_work_item_comment_add` | Add a comment to a work item | ❌ |
+| `devops_work_item_comment_update` | Update an existing comment on a work item | ❌ |
+| `devops_work_item_comment_delete` | Delete a comment from a work item | ❌ |
 
 ### Wiki
 

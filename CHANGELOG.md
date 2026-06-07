@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-06-07
+
+### Added
+- `devops_work_item_type_get`: get the definition of a work item type by name
+- `devops_work_item_create`: create a new work item with typed fields and optional Html/Markdown format hint
+- `devops_work_item_update`: update fields on an existing work item using JSON Patch (add/replace/remove)
+- `devops_work_item_delete`: delete a work item by ID; soft-deletes to Recycle Bin by default, or permanently with `destroy=True` (requires project permission)
+- `devops_work_item_undelete`: restore a soft-deleted work item from the Recycle Bin
+- `devops_work_item_link_update`: add or remove a relation link between two work items (parent, child, related, successor, predecessor, etc.)
+- `devops_work_item_artifact_link_update`: add or remove an artifact link (Pull Request, Build, Commit, Branch, Changeset, Versioned Item) on a work item
+- `devops_work_item_comment_list`: list comments on a work item with configurable format and count
+- `devops_work_item_comment_add`: add a comment to a work item
+- `devops_work_item_comment_update`: update an existing comment on a work item
+- `devops_work_item_comment_delete`: delete a comment from a work item
+
+### Changed
+- `devops_work_item_create`: default field format is Html (not Markdown); Markdown is opt-in per field
+- `repository_tools.py`: moved private helpers to top of file for consistency
+
+---
+
 ## [0.2.0] - 2026-06-02
 
 ### Changed
@@ -32,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NTLM, PAT, and OAuth Bearer token authentication
 - GitHub Actions CI and PyPI publish workflows
 
-[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/zwitbaum/mcp-devops-on-prem/releases/tag/v0.1.0

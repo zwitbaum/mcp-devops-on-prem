@@ -1,8 +1,45 @@
+import difflib
 from typing import Annotated
 
 from fastmcp.exceptions import ToolError
 
 from mcp_devops.shared import devops_api_url, mcp, devops_api_get
+
+
+def _validate_commit_sha(sha: str) -> None:
+    """Raise ToolError early if sha is not a valid 40-char hex commit SHA."""
+    if not (isinstance(sha, str) and len(sha) == 40 and all(c in "0123456789abcdefABCDEF" for c in sha)):
+        raise ToolError(
+            f"Invalid commit SHA: '{sha}'. Expected a 40-character hexadecimal string. "
+            "Use devops_pull_request_get to obtain lastMergeSourceCommit / lastMergeTargetCommit."
+        )
+
+
+def _make_item_url(repository_id: str, path: str, version: str) -> str:
+    _validate_commit_sha(version)
+    return (
+        f"{devops_api_url}/_apis/git/repositories/{repository_id}/items?path={path.lstrip('/')}"
+        + f"&versionDescriptor.version={version}&versionDescriptor.versionType=commit"
+        + "&includeContent=true"
+    )
+
+
+def _extract_item_text_by_response(resp) -> str:
+    if isinstance(resp, dict):
+        return resp.get("content") or resp.get("value") or ""
+    if isinstance(resp, str):
+        return resp
+    return ""
+
+
+def _request_item_content(repository_id: str, path: str, version: str):
+    url = _make_item_url(repository_id, path, version)
+    return devops_api_get(url)
+
+
+def _extract_item_text(repository_id: str, path: str, version: str) -> str:
+    resp = _request_item_content(repository_id, path, version)
+    return _extract_item_text_by_response(resp) or ""
 
 
 @mcp.tool(
@@ -133,8 +170,6 @@ def get_item_content_diff(  # noqa: C901 - readability prioritized for difflib l
     base_lines = base_text.splitlines()
     target_lines = target_text.splitlines()
 
-    import difflib
-
     raw = list(difflib.ndiff(base_lines, target_lines))
 
     all_processed = []
@@ -210,39 +245,3 @@ def get_item_content_diff(  # noqa: C901 - readability prioritized for difflib l
         "changeType": change_type,
         "changes": changes_text,
     }
-
-
-def _validate_commit_sha(sha: str) -> None:
-    """Raise ToolError early if sha is not a valid 40-char hex commit SHA."""
-    if not (isinstance(sha, str) and len(sha) == 40 and all(c in "0123456789abcdefABCDEF" for c in sha)):
-        raise ToolError(
-            f"Invalid commit SHA: '{sha}'. Expected a 40-character hexadecimal string. "
-            "Use devops_pull_request_get to obtain lastMergeSourceCommit / lastMergeTargetCommit."
-        )
-
-
-def _make_item_url(repository_id: str, path: str, version: str) -> str:
-    _validate_commit_sha(version)
-    return (
-        f"{devops_api_url}/_apis/git/repositories/{repository_id}/items?path={path.lstrip('/')}"
-        + f"&versionDescriptor.version={version}&versionDescriptor.versionType=commit"
-        + "&includeContent=true"
-    )
-
-
-def _extract_item_text_by_response(resp) -> str:
-    if isinstance(resp, dict):
-        return resp.get("content") or resp.get("value") or ""
-    if isinstance(resp, str):
-        return resp
-    return ""
-
-
-def _request_item_content(repository_id: str, path: str, version: str):
-    url = _make_item_url(repository_id, path, version)
-    return devops_api_get(url)
-
-
-def _extract_item_text(repository_id: str, path: str, version: str) -> str:
-    resp = _request_item_content(repository_id, path, version)
-    return _extract_item_text_by_response(resp) or ""
