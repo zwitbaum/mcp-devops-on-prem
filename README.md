@@ -9,8 +9,7 @@ Model Context Protocol [MCP](https://modelcontextprotocol.io/) server for **on-p
 
 <div class="toc">
   <a href="#overview">Overview</a> •  
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#installation-guide">Installation Guide</a> •
+  <a href="#getting-started">Getting Started</a> •  
   <a href="#updating">Updating</a> •
   <a href="#available-tools">Available Tools</a> •
   <a href="#development">Development</a>
@@ -36,297 +35,25 @@ This MCP server closes that gap and enables smooth integration with on-premise D
 
 ## Getting Started
 
+### Prerequisites
+[Python 3.10+](docs/getting-started.md#prerequisites) and [uv](docs/getting-started.md#uv) are required. If not yet installed, see [installation guide](docs/getting-started.md#prerequisites).
+
 ### Quick Install
 
-**Prerequisites:** [Python 3.10+](#prerequisites) and [uv](#uv) are required. If not yet installed, see [Prerequisites](#prerequisites) in the Installation Guide below.
+Click one of the buttons below to install directly in your IDE. You will be prompted for credentials:
 
-Click one of the buttons below to install directly in your IDE — you will be prompted for credentials:
+[![Install in VS Code](https://img.shields.io/badge/Install_in-VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=devops-onprem&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22mcp-devops-onpremise%40latest%22%5D%2C%22env%22%3A%7B%22DEVOPS_API_URL%22%3A%22%24%7Binput%3Adevops_api_url%7D%22%2C%22DEVOPS_USERNAME%22%3A%22%24%7Binput%3Adevops_username%7D%22%2C%22DEVOPS_PASSWORD%22%3A%22%24%7Binput%3Adevops_password%7D%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22devops_api_url%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Azure%20DevOps%20API%20URL%20%28https%3A%2F%2Fserver%2Forg%2Fproject%29%22%7D%2C%7B%22id%22%3A%22devops_username%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Username%20%28DOMAIN%5C%5Cusername%29%22%7D%2C%7B%22id%22%3A%22devops_password%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Password%20or%20PAT%22%2C%22password%22%3Atrue%7D%5D%7D)
+[![Install in VS Code Insiders](https://img.shields.io/badge/Install_in-VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=devops-onprem&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22mcp-devops-onpremise%40latest%22%5D%2C%22env%22%3A%7B%22DEVOPS_API_URL%22%3A%22%24%7Binput%3Adevops_api_url%7D%22%2C%22DEVOPS_USERNAME%22%3A%22%24%7Binput%3Adevops_username%7D%22%2C%22DEVOPS_PASSWORD%22%3A%22%24%7Binput%3Adevops_password%7D%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22devops_api_url%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Azure%20DevOps%20API%20URL%20%28https%3A%2F%2Fserver%2Forg%2Fproject%29%22%7D%2C%7B%22id%22%3A%22devops_username%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Username%20%28DOMAIN%5C%5Cusername%29%22%7D%2C%7B%22id%22%3A%22devops_password%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Password%20or%20PAT%22%2C%22password%22%3Atrue%7D%5D%7D&quality=insiders)
+[![Install in Cursor](https://img.shields.io/badge/Install_in-Cursor-000000?style=flat-square&logoColor=white)](https://cursor.com/en/install-mcp?name=devops-onprem&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJtY3AtZGV2b3BzLW9ucHJlbWlzZUBsYXRlc3QiXSwiZW52Ijp7fX0=)
 
-[![Install in VS Code](https://img.shields.io/badge/Install_in-VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=devops-onprem&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22mcp-devops-onpremise%22%5D%2C%22env%22%3A%7B%22DEVOPS_API_URL%22%3A%22%24%7Binput%3Adevops_api_url%7D%22%2C%22DEVOPS_USERNAME%22%3A%22%24%7Binput%3Adevops_username%7D%22%2C%22DEVOPS_PASSWORD%22%3A%22%24%7Binput%3Adevops_password%7D%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22devops_api_url%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Azure%20DevOps%20API%20URL%20%28https%3A%2F%2Fserver%2Forg%2Fproject%29%22%7D%2C%7B%22id%22%3A%22devops_username%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Username%20%28DOMAIN%5C%5Cusername%29%22%7D%2C%7B%22id%22%3A%22devops_password%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Password%20or%20PAT%22%2C%22password%22%3Atrue%7D%5D%7D)
-[![Install in VS Code Insiders](https://img.shields.io/badge/Install_in-VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=devops-onprem&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22mcp-devops-onpremise%22%5D%2C%22env%22%3A%7B%22DEVOPS_API_URL%22%3A%22%24%7Binput%3Adevops_api_url%7D%22%2C%22DEVOPS_USERNAME%22%3A%22%24%7Binput%3Adevops_username%7D%22%2C%22DEVOPS_PASSWORD%22%3A%22%24%7Binput%3Adevops_password%7D%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22devops_api_url%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Azure%20DevOps%20API%20URL%20%28https%3A%2F%2Fserver%2Forg%2Fproject%29%22%7D%2C%7B%22id%22%3A%22devops_username%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Username%20%28DOMAIN%5C%5Cusername%29%22%7D%2C%7B%22id%22%3A%22devops_password%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Password%20or%20PAT%22%2C%22password%22%3Atrue%7D%5D%7D&quality=insiders)
-[![Install in Cursor](https://img.shields.io/badge/Install_in-Cursor-000000?style=flat-square&logoColor=white)](https://cursor.com/en/install-mcp?name=devops-onprem&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJtY3AtZGV2b3BzLW9ucHJlbWlzZSJdLCJlbnYiOnt9fQ==)
-
-For other platforms, see [Manual Installation](#manual-installation) below.
+For other platforms, see [Manual Installation](docs/getting-started.md#manual-installation) in the Getting Started guide.
 
 
 ### Manual Installation
 
-> For the server command and environment variable settings used in the steps below, see [Configuration](#configuration) in the Installation Guide.
+The MCP server can be installed manually in the following AI tools: **VS Code, Visual Studio, Cursor, Goose, LM Studio, Amp, Claude Code, Claude Desktop, Codex, Gemini CLI, OpenCode, Qodo Gen, Warp, Windsurf, GitHub Copilot CLI, GitHub Copilot Coding Agent,** and others.
 
-<details>
-<summary>VS Code</summary>
-
-Follow the MCP install [guide](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server), use the [configuration](#configuration) below. 
-
-After installation, the devops-onprem MCP server will be available for use with your GitHub Copilot agent in VS Code.
-</details>
-
-<details>
-<summary>VS Code Insiders</summary>
-
-Follow the MCP install [guide](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server), use the [configuration](#configuration) below.
-
-After installation, the devops-onprem MCP server will be available for use with your GitHub Copilot agent in VS Code Insiders.
-</details>
-
-<details>
-<summary>Visual Studio</summary>
-
-1. Open Visual Studio
-2. Navigate to the GitHub Copilot Chat window
-3. Click the tools icon (🛠️) in the chat toolbar
-4. Click the + "Add Custom MCP Server" button to open the "Configure MCP server" dialog
-5. Fill in the configuration:
-   - **Server ID**: `devops-onprem`
-   - **Type**: Select `stdio` from the dropdown
-   - **Command (with optional arguments)**: `uvx mcp-devops-onpremise`
-   - **Envisronment Variables**: add like described in the Configuration chapter.
-6. Click "Save" to add the server
-
-For detailed instructions, see the [Visual Studio MCP documentation](https://learn.microsoft.com/visualstudio/ide/mcp-servers).
-</details>
-
-<details>
-<summary>Cursor</summary>
-
-Go to `Cursor Settings` -> `MCP` -> `Add new MCP Server`. Name to your liking, use `command` type with the command from the [configuration](#configuration) below. You can also verify config or add command like arguments via clicking `Edit`.
-</details>
-
-<details>
-<summary>Goose</summary>
-
-Go to `Advanced settings` -> `Extensions` -> `Add custom extension`. Name to your liking, use type `STDIO`, and set the `command` from the [configuration](#configuration) below. Click "Add Extension".
-</details>
-
-<details>
-<summary>LM Studio</summary>
-
-Go to `Program` in the right sidebar -> `Install` -> `Edit mcp.json`. Use the [configuration](#configuration) below.
-</details>
-
-<details>
-<summary>Amp</summary>
-
-Add via the Amp VS Code extension settings screen or by updating your settings.json file:
-
-```json
-"amp.mcpServers": 
-  "devops-onprem": {
-    "command": "uvx",
-    "args": [
-      "mcp-devops-onpremise"
-    ],
-    "env": {}
-  }
-
-```
-
-**Amp CLI Setup:**
-
-Add via the `amp mcp add` command below:
-
-```bash
-amp mcp add devops-onprem -- uvx mcp-devops-onpremise
-```
-</details>
-
-<details>
-<summary>Claude Code</summary>
-
-Use the Claude Code CLI to add the devops-onprem MCP server:
-
-```bash
-claude mcp add devops-onprem uvx mcp-devops-onpremise
-```
-</details>
-
-<details>
-<summary>Claude Desktop</summary>
-
-Follow the MCP install [guide](https://modelcontextprotocol.io/quickstart/user), use the [configuration](#configuration) below.
-</details>
-
-<details>
-<summary>Codex</summary>
-
-Create or edit the configuration file `~/.codex/config.toml` and add:
-
-```toml
-[mcp_servers.devops-onprem]
-command = "uvx"
-args = ["mcp-devops-onpremise"]
-```
-
-For more information, see the [Codex MCP documentation](https://github.com/openai/codex/blob/main/codex-rs/config.md#mcp_servers).
-</details>
-
-<details>
-<summary>Gemini CLI</summary>
-
-Follow the MCP install [guide](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md#configure-the-mcp-server-in-settingsjson), use the [configuration](#configuration) below.
-</details>
-
-<details>
-<summary>OpenCode</summary>
-
-Follow the MCP Servers [documentation](https://opencode.ai/docs/mcp-servers/). For example in `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "devops-onprem": {
-      "type": "local",
-      "command": [
-        "uvx",
-        "mcp-devops-onpremise"
-      ],
-      "enabled": true
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary>Qodo Gen</summary>
-
-Open [Qodo Gen](https://docs.qodo.ai/qodo-documentation/qodo-gen) chat panel in VSCode or IntelliJ → Connect more tools → + Add new MCP → Paste the [configuration](#configuration) below.
-
-Click Save.
-</details>
-
-<details>
-<summary>Warp</summary>
-
-Go to `Settings` -> `AI` -> `Manage MCP Servers` -> `+ Add` to [add an MCP Server](https://docs.warp.dev/knowledge-and-collaboration/mcp#adding-an-mcp-server). Use the [configuration](#configuration) below.
-
-Alternatively, use the slash command `/add-mcp` in the Warp prompt and paste the [configuration](#configuration) below.
-</details>
-
-<details>
-<summary>Windsurf</summary>
-
-Follow Windsurf MCP [documentation](https://docs.windsurf.com/windsurf/cascade/mcp). Use the [configuration](#configuration) below.
-</details>
-
-<details>
-<summary>GitHub Copilot CLI</summary>
-
-GitHub Copilot CLI supports adding MCP servers interactively and through a config file.
-
-#### Option 1: Interactive setup with `/mcp add`
-
-1. Open GitHub Copilot CLI in interactive mode.
-2. Run `/mcp add`.
-3. Enter **Server Name**: `devops-onprem`.
-4. Choose **Server Type**:
-   - `STDIO` for command-based servers
-   - `HTTP` for remote servers
-5. Fill in command/url settings from the [configuration](#configuration) below and set **Tools** to `*`.
-6. Press `Ctrl+S` to save.
-
-#### Option 2: Edit `~/.copilot/mcp-config.json`
-
-Use the [configuration](#configuration) below.
-
-For more information, see the [GitHub Copilot CLI MCP documentation](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers).
-</details>
-
-<details>
-<summary>GitHub Copilot Coding Agent</summary>
-
-GitHub Copilot Coding Agent can use MCP servers to extend its capabilities. Use the [configuration](#configuration) below — add it to your repository settings under **Copilot > Coding agent**.
-
-Add this configuration to your repository settings under **Copilot > Coding agent**. The `"tools": ["*"]` setting enables all available tools from the MCP server.
-
-For more information, see the [GitHub Copilot Coding Agent MCP documentation](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/extend-coding-agent-with-mcp).
-</details>
-
-
-## Installation Guide
-
-### Prerequisites
-
-#### Python 3.10 or later
-
-If Python is not installed on your machine, download it from [python.org](https://www.python.org/downloads/).
-
-> **Windows:** Check **"Add Python to PATH"** during installation.  
-> `pip` is included with Python — no separate install needed.
-
-#### uv
-
-`uv` is a fast Python package manager that powers the one-click installs and the ephemeral server launch.
-
-> **Windows users:** Open **Command Prompt** (`cmd`) or **PowerShell** to run all commands in this guide.
-
-```
-pip install uv
-```
-
-> More info: [uv documentation](https://github.com/astral-sh/uv)
-
-### Standalone Server Installation (optional)
-
-In most cases you do not need to install the server separately — the IDE integrations in [Getting Started](#getting-started) handle this automatically via `uvx`. If you need to run or test the server outside an IDE:
-
-**Ephemeral (recommended, no permanent install):**
-
-```
-uvx mcp-devops-onpremise
-```
-
-**Permanent install:**
-
-```
-pip install mcp-devops-onpremise
-```
-
-### Authentication
-
-The server supports three authentication methods. **Start with NTLM (username + password) if you connect via VPN or are on a corporate network. Use PAT if it is available and works in your environment.**
-
-#### Option 1: Username + Password (NTLM — most common for on-prem/VPN)
-
-Typical for on-premises Azure DevOps Server accessed via VPN or Windows Auth.
-
-| Variable | Value |
-|---|---|
-| `DEVOPS_USERNAME` | `DOMAIN\your-username` |
-| `DEVOPS_PASSWORD` | Your Windows / Active Directory password |
-
-#### Option 2: Personal Access Token (PAT)
-
-PAT is simpler to configure but may not work if your on-prem server blocks token-based access or requires VPN + NTLM.
-
-To create a PAT: open your DevOps profile → **Personal access tokens** → **New token**.
-See: [Microsoft docs - Create a PAT](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate)
-
-| Variable | Value |
-|---|---|
-| `DEVOPS_PAT` | Your personal access token |
-| `DEVOPS_USERNAME` | *(optional)* Your username |
-
-#### Option 3: OAuth Bearer Token (advanced / CI/CD only)
-
-OAuth Bearer tokens work only if your on-prem Azure DevOps Server has OAuth 2.0 configured — uncommon in standard on-prem setups. Mainly useful for Azure DevOps Services (cloud) or automated pipelines that receive short-lived tokens from an identity provider.
-
-| Variable | Value |
-|---|---|
-| `DEVOPS_TOKEN` | Your OAuth Bearer token |
-
-> If you are unsure whether OAuth is available, use NTLM or PAT instead.
-
-### MD4 Support (NTLM only, optional)
-
-NTLM authentication requires the MD4 hash algorithm, which is not included in all Python environments. If you encounter an MD4-related error, install `pycryptodome`:
-
-```
-pip install pycryptodome
-```
-
-> Skip this step if you use PAT or OAuth.
+For step-by-step instructions, see [Manual Installation](docs/getting-started.md#manual-installation) in the Getting Started guide.
 
 ### Configuration
 
@@ -335,6 +62,16 @@ The `DEVOPS_API_URL` must point to your full project URL:
 https://<your-devops-server>/<organization>/<project>
 ```
 
+The server supports three authentication methods. If you are unsure which one to use, start with NTLM because it is the most common for on-prem/VPN setups.
+
+| Method | Description |
+|---|---|
+| **NTLM** (username + password) | Most common for on-prem/VPN. Usually the simplest first setup and best fallback if other options fail. |
+| **PAT** (Personal Access Token) | Use when PAT is enabled and allowed. Tokens can expire, and token-based auth may be blocked by policy. Advantage: you do not store your account password in config. |
+| **OAuth Bearer Token** | Advanced option for CI/CD pipelines. Requires OAuth 2.0 configured on your DevOps Server and a token source defined by your administrators. |
+
+For detailed setup instructions for each method, see [Authentication](docs/getting-started.md#authentication) in the Getting Started guide.
+
 #### With NTLM (username + password)
 
 ```json
@@ -342,7 +79,7 @@ https://<your-devops-server>/<organization>/<project>
   "mcpServers": {
     "devops-onprem": {
       "command": "uvx",
-      "args": ["mcp-devops-onpremise"],
+      "args": ["mcp-devops-onpremise@latest"],
       "env": {
         "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
         "DEVOPS_USERNAME": "DOMAIN\\your-username",
@@ -360,7 +97,7 @@ https://<your-devops-server>/<organization>/<project>
   "mcpServers": {
     "devops-onprem": {
       "command": "uvx",
-      "args": ["mcp-devops-onpremise"],
+      "args": ["mcp-devops-onpremise@latest"],
       "env": {
         "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
         "DEVOPS_PAT": "your-personal-access-token"
@@ -388,7 +125,7 @@ Visit the [releases page on GitHub](https://github.com/zwitbaum/mcp-devops-on-pr
 
 ### Update to the latest version
 
-**If you use `uvx` (Option A):** `uvx` always fetches the latest version from PyPI automatically — no action needed.
+**If you use `uvx` (Option A):** All configuration examples in this guide use `mcp-devops-onpremise@latest`. This instructs `uvx` to always check PyPI for the latest version and update automatically.
 
 **If you installed permanently (Option B):**
 
@@ -431,7 +168,7 @@ pip install --upgrade mcp-devops-onpremise
 | `devops_work_item_type_get` | Get the definition of a work item type by name (e.g. `Bug`, `User Story`) | ✅ |
 | `devops_work_item_create` | Create a new work item with typed fields; Html is the default format | ❌ |
 | `devops_work_item_update` | Update fields on a work item using JSON Patch (add / replace / remove) | ❌ |
-| `devops_work_item_delete` | Delete a work item — moves to Recycle Bin by default; use `destroy=True` for permanent deletion (requires project permission) | ❌ |
+| `devops_work_item_delete` | Delete a work item, moves to Recycle Bin by default; use `destroy=True` for permanent deletion (requires project permission) | ❌ |
 | `devops_work_item_undelete` | Restore a soft-deleted work item from the Recycle Bin | ❌ |
 | `devops_work_item_link_update` | Add or remove a relation link between two work items (parent, child, related, successor, predecessor, etc.) | ❌ |
 | `devops_work_item_artifact_link_update` | Add or remove an artifact link (Pull Request, Build, Commit, Branch, Changeset) on a work item | ❌ |
