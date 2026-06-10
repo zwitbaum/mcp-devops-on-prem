@@ -26,7 +26,10 @@ This MCP server closes that gap and enables smooth integration with on-premise D
 
 ## Key Advantages
 
-- Supports typical on-prem DevOps authentication: NTLM (Windows login/password) and Personal Access Tokens (PAT).
+One of the most important features of this MCP server is **NTLM authentication** support. NTLM is required by many on-premises and enterprise environments where users authenticate with Windows domain credentials, either directly or over VPN. Most MCP servers for Azure DevOps target only cloud-hosted Azure DevOps Services with token-based auth and cannot connect to these environments.
+
+- NTLM authentication (Windows domain credentials) for on-prem and VPN-based setups where no other auth method works.
+- PAT and OAuth bearer token authentication as alternatives when available.
 - Enables secure access to on-prem DevOps systems from MCP-compatible AI tools such as GitHub Copilot, Claude Desktop, Cursor, Windsurf, and others.
 - Works in restricted or offline environments without exposing sensitive data to external services.
 - Retrieves commit diffs with clear added/removed lines, similar to the DevOps UI.

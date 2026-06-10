@@ -25,12 +25,28 @@ Without this MCP server (or another equivalent integration), your assistant usua
 
 Also, Microsoft states in its [Azure DevOps MCP - FAQ](https://github.com/microsoft/azure-devops-mcp/blob/main/docs/FAQ.md) that their MCP server supports Azure DevOps Services only and they currently do not plan Azure DevOps On-Prem support. This MCP server fills that gap for on-prem environments.
 
+## What makes this server stand out
+
+One of the most important features of this server is **NTLM authentication** support, which is required by many on-premises and enterprise environments where users authenticate with their Windows domain credentials, either directly or over VPN. Most MCP servers for Azure DevOps target only cloud-hosted Azure DevOps Services with token-based auth and cannot connect to these environments.
+
+This means you can use this server in environments where:
+
+- NTLM is the only supported authentication method on your DevOps Server instance,
+- your organization requires VPN access and domain credentials to reach internal systems,
+- PAT or OAuth token auth is blocked or not enabled by policy.
+
 ## What this server provides
 
-- On-prem-friendly authentication options (NTLM, PAT, OAuth bearer token).
+- **NTLM authentication** (Windows domain credentials) for on-prem and VPN-based enterprise environments.
+- PAT and OAuth bearer token authentication as alternatives.
 - Tooling for DevOps workflows, such as pull requests, repositories, work items, wiki pages, and similar scenarios.
 - Support for enterprise environments where direct cloud integrations are not possible.
 
 ## Documentation
 
 - [Getting Started](./getting-started.md) - Setup steps for installing and configuring this MCP server in your AI client.
+
+## Project
+
+- [GitHub Repository](https://github.com/zwitbaum/mcp-devops-on-prem) - Source code, issues, and releases.
+- [PyPI Package](https://pypi.org/project/mcp-devops-onpremise) - Install via pip or uvx.
