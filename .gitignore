@@ -59,6 +59,9 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
+# Temporary processing/scratch folder
+.processing/
+
 # Debug and local development
 debug/
 cython_debug/
