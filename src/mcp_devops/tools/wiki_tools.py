@@ -2,7 +2,15 @@ import urllib.parse
 import re
 from typing import Annotated
 from fastmcp.exceptions import ToolError
-from mcp_devops.shared import devops_api_get, devops_api_put, devops_api_patch, devops_api_delete, get_base_api_url, mcp, DEVOPS_API_VERSION
+from mcp_devops.shared import (
+    devops_api_get,
+    devops_api_put,
+    devops_api_patch,
+    devops_api_delete,
+    get_base_api_url,
+    mcp,
+    DEVOPS_API_VERSION,
+)
 from requests.exceptions import HTTPError
 
 WIKI_API_PATH = "_apis/wiki/wikis"
@@ -44,8 +52,8 @@ def create_wiki_page(
 ) -> object:
     """Create or update a wiki page as a child of the given parent page and return a metadata."""
     subpage_path = f"{parent_path}/{title}"
-
-    url = f"{get_base_api_url(organization, project, get_api_path(wiki_id))}/pages?path={subpage_path}&api-version={DEVOPS_API_VERSION}"
+    base = get_base_api_url(organization, project, get_api_path(wiki_id))
+    url = f"{base}/pages?path={subpage_path}&api-version={DEVOPS_API_VERSION}"
 
     extra_headers = {}
     try:
@@ -94,7 +102,8 @@ def update_wiki_page(
     if not isinstance(page_id, int) or page_id <= 0:
         raise ToolError("Invalid page_id. It should be a positive integer.")
 
-    url = f"{get_base_api_url(organization, project, get_api_path(wiki_id))}/pages/{page_id}?api-version={DEVOPS_API_VERSION}"
+    base = get_base_api_url(organization, project, get_api_path(wiki_id))
+    url = f"{base}/pages/{page_id}?api-version={DEVOPS_API_VERSION}"
 
     extra_headers = {}
     try:
@@ -132,7 +141,8 @@ def delete_wiki_page(
     if not isinstance(page_id, int) or page_id <= 0:
         raise ToolError("Invalid page_id. It should be a positive integer.")
 
-    url = f"{get_base_api_url(organization, project, get_api_path(wiki_id))}/pages/{page_id}?api-version={DEVOPS_API_VERSION}"
+    base = get_base_api_url(organization, project, get_api_path(wiki_id))
+    url = f"{base}/pages/{page_id}?api-version={DEVOPS_API_VERSION}"
     if comment:
         url += "&" + urllib.parse.urlencode({"comment": comment})
 

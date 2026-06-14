@@ -331,9 +331,7 @@ def get_work_item_type(
 
 @mcp.tool(
     name="devops_work_item_query_by_wiql",
-    description=(
-        "Execute a WIQL (Work Item Query Language) query and return the matching work items."
-    ),
+    description=("Execute a WIQL (Work Item Query Language) query and return the matching work items."),
     annotations={"readOnlyHint": True},
 )
 def query_work_items_by_wiql(
@@ -341,7 +339,7 @@ def query_work_items_by_wiql(
         str,
         (
             "The WIQL query string. Example: "
-            "\"SELECT [System.Id], [System.Title], [System.State] "
+            '"SELECT [System.Id], [System.Title], [System.State] '
             "FROM WorkItems WHERE [System.WorkItemType] = 'Bug' "
             "AND [System.State] <> 'Closed' ORDER BY [System.CreatedDate] DESC\""
         ),
@@ -371,9 +369,9 @@ def query_work_items_by_wiql(
 
     ids = [ref["id"] for ref in work_item_refs]
 
-    _BATCH_LIMIT = 200
-    truncated = len(ids) > _BATCH_LIMIT
-    ids = ids[:_BATCH_LIMIT]
+    _batch_limit = 200
+    truncated = len(ids) > _batch_limit
+    ids = ids[:_batch_limit]
 
     # Use exactly the columns from the WIQL SELECT clause
     batch_fields = [col["referenceName"] for col in wiql_result.get("columns", [])]

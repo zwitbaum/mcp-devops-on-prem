@@ -41,6 +41,7 @@ __doc__ = (
     "- devops_work_item_get: retrieve a work item (PBI, bug, task, etc.) by ID\n"
     "- devops_work_item_attachment_get: download a work item attachment by ID\n"
     "- devops_work_item_type_get: get work item type definition by name\n"
+    "- devops_work_item_query_by_wiql: execute a WIQL query and return matching work items\n"
     "- devops_work_item_create: create a new work item with fields\n"
     "- devops_work_item_update: update fields on an existing work item\n"
     "- devops_work_item_delete: delete a work item (Recycle Bin or permanent)\n"

@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - 2026-06-15
+
+### Added
+- `devops_work_item_query_by_wiql`: execute a WIQL (Work Item Query Language) query and return matching work items, with automatic field resolution and batched item lookup (up to 200 results)
+
+### Changed
+- `shared.py`: extracted `DEVOPS_API_VERSION` constant to a single location in `shared.py`; all tool modules now import and use this constant
+- `pyproject.toml`: updated development status classifier to `Production/Stable`
+
+---
+
 ## [0.3.0] - 2026-06-07
 
 ### Added
@@ -53,7 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NTLM, PAT, and OAuth Bearer token authentication
 - GitHub Actions CI and PyPI publish workflows
 
-[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.3.0...v1.0.0
 [0.3.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/zwitbaum/mcp-devops-on-prem/releases/tag/v0.1.0
