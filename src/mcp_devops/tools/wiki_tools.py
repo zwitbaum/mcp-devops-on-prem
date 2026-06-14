@@ -2,7 +2,7 @@ import urllib.parse
 import re
 from typing import Annotated
 from fastmcp.exceptions import ToolError
-from mcp_devops.shared import devops_api_get, devops_api_put, devops_api_patch, devops_api_delete, get_base_api_url, mcp
+from mcp_devops.shared import devops_api_get, devops_api_put, devops_api_patch, devops_api_delete, get_base_api_url, mcp, DEVOPS_API_VERSION
 from requests.exceptions import HTTPError
 
 WIKI_API_PATH = "_apis/wiki/wikis"
@@ -45,7 +45,7 @@ def create_wiki_page(
     """Create or update a wiki page as a child of the given parent page and return a metadata."""
     subpage_path = f"{parent_path}/{title}"
 
-    url = f"{get_base_api_url(organization, project, get_api_path(wiki_id))}/pages?path={subpage_path}&api-version=7.1"
+    url = f"{get_base_api_url(organization, project, get_api_path(wiki_id))}/pages?path={subpage_path}&api-version={DEVOPS_API_VERSION}"
 
     extra_headers = {}
     try:
@@ -94,7 +94,7 @@ def update_wiki_page(
     if not isinstance(page_id, int) or page_id <= 0:
         raise ToolError("Invalid page_id. It should be a positive integer.")
 
-    url = f"{get_base_api_url(organization, project, get_api_path(wiki_id))}/pages/{page_id}?api-version=7.1"
+    url = f"{get_base_api_url(organization, project, get_api_path(wiki_id))}/pages/{page_id}?api-version={DEVOPS_API_VERSION}"
 
     extra_headers = {}
     try:
@@ -132,7 +132,7 @@ def delete_wiki_page(
     if not isinstance(page_id, int) or page_id <= 0:
         raise ToolError("Invalid page_id. It should be a positive integer.")
 
-    url = f"{get_base_api_url(organization, project, get_api_path(wiki_id))}/pages/{page_id}?api-version=7.1"
+    url = f"{get_base_api_url(organization, project, get_api_path(wiki_id))}/pages/{page_id}?api-version={DEVOPS_API_VERSION}"
     if comment:
         url += "&" + urllib.parse.urlencode({"comment": comment})
 
@@ -163,7 +163,7 @@ def get_api_path(wiki_id):
 def get_wiki_page_details(organization, project, wiki_id, page_id, include_content):
     url = (
         f"{get_base_api_url(organization, project, get_api_path(wiki_id))}"
-        f"/pages/{page_id}?includeContent={str(include_content).lower()}&api-version=7.1"
+        f"/pages/{page_id}?includeContent={str(include_content).lower()}&api-version={DEVOPS_API_VERSION}"
     )
     return devops_api_get(url)
 
@@ -171,6 +171,6 @@ def get_wiki_page_details(organization, project, wiki_id, page_id, include_conte
 def get_wiki_info(organization, project, wiki_id):
     if wiki_id not in WIKI_INFO_CACHE:
         WIKI_INFO_CACHE[wiki_id] = devops_api_get(
-            f"{get_base_api_url(organization, project, get_api_path(wiki_id))}?api-version=7.1"
+            f"{get_base_api_url(organization, project, get_api_path(wiki_id))}?api-version={DEVOPS_API_VERSION}"
         )
     return WIKI_INFO_CACHE[wiki_id]

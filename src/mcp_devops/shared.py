@@ -21,6 +21,9 @@ devops_url = f"{_parsed.scheme}://{_parsed.netloc}" if _parsed.netloc else devop
 
 DEFAULT_TIMEOUT = 30
 
+# Azure DevOps REST API version used across all tool modules.
+DEVOPS_API_VERSION = "7.1"
+
 # Updated docstring to comply with line length limits
 __doc__ = (
     "\n"

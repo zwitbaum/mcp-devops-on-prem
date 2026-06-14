@@ -8,6 +8,7 @@ from mcp_devops.shared import (
     devops_api_patch,
     devops_api_delete,
     fetch_work_item,
+    DEVOPS_API_VERSION,
 )
 
 
@@ -176,7 +177,7 @@ def create_pull_request_comment(
     """Create a pull request thread (comment) on the specified PR."""
     url = (
         f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests"
-        f"/{pull_request_id}/threads?api-version=7.1"
+        f"/{pull_request_id}/threads?api-version={DEVOPS_API_VERSION}"
     )
 
     payload = {
@@ -230,7 +231,7 @@ def reply_pull_request_comment(
     """Reply to an existing pull request thread (comment) on the specified PR."""
     url = (
         f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests"
-        f"/{pull_request_id}/threads/{thread_id}/comments?api-version=7.1"
+        f"/{pull_request_id}/threads/{thread_id}/comments?api-version={DEVOPS_API_VERSION}"
     )
 
     payload = {
@@ -265,7 +266,7 @@ def update_pull_request_thread(
     """Update the status of an existing pull request thread."""
     url = (
         f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests"
-        f"/{pull_request_id}/threads/{thread_id}?api-version=7.1"
+        f"/{pull_request_id}/threads/{thread_id}?api-version={DEVOPS_API_VERSION}"
     )
 
     payload = {"status": status}
@@ -294,7 +295,7 @@ def update_pull_request_comment(
     """Update a text comment inside an existing pull request thread."""
     comment_url = (
         f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests/"
-        f"{pull_request_id}/threads/{thread_id}/comments/{comment_id}?api-version=7.1"
+        f"{pull_request_id}/threads/{thread_id}/comments/{comment_id}?api-version={DEVOPS_API_VERSION}"
     )
 
     payload = {
@@ -328,7 +329,7 @@ def delete_pull_request_comment(
     """Delete a specific comment from a pull request thread."""
     comment_url = (
         f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests/"
-        f"{pull_request_id}/threads/{thread_id}/comments/{comment_id}?api-version=7.1"
+        f"{pull_request_id}/threads/{thread_id}/comments/{comment_id}?api-version={DEVOPS_API_VERSION}"
     )
 
     devops_api_delete(comment_url)

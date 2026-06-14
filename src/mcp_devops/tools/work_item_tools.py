@@ -15,6 +15,7 @@ from mcp_devops.shared import (
     devops_api_post,
     devops_api_url,
     mcp,
+    DEVOPS_API_VERSION,
 )
 
 
@@ -190,7 +191,7 @@ def _build_artifact_vstfs_url(link_type: str, artifact_id: str) -> tuple[str, st
 
 def _patch_work_item(work_item_id: int, document: list, validate_only: Optional[bool] = None) -> object:
     """Send a JSON Patch document to the work item update endpoint."""
-    url = f"{devops_api_url}/_apis/wit/workitems/{work_item_id}?api-version=7.1"
+    url = f"{devops_api_url}/_apis/wit/workitems/{work_item_id}?api-version={DEVOPS_API_VERSION}"
     if validate_only is not None:
         url += f"&validateOnly={'true' if validate_only else 'false'}"
     return devops_api_patch(
@@ -355,7 +356,7 @@ def query_work_items_by_wiql(
     ] = None,
 ) -> object:
     """Execute a WIQL query and return matching work items with the queried fields."""
-    wiql_url = f"{devops_api_url}/_apis/wit/wiql?api-version=7.1"
+    wiql_url = f"{devops_api_url}/_apis/wit/wiql?api-version={DEVOPS_API_VERSION}"
     if top is not None:
         wiql_url += f"&$top={top}"
     if time_precision is not None:
@@ -379,7 +380,7 @@ def query_work_items_by_wiql(
     if not batch_fields:
         batch_fields = ["System.Id", "System.Title"]
 
-    batch_url = f"{devops_api_url}/_apis/wit/workitemsbatch?api-version=7.1"
+    batch_url = f"{devops_api_url}/_apis/wit/workitemsbatch?api-version={DEVOPS_API_VERSION}"
     batch_result = devops_api_post(batch_url, {"ids": ids, "fields": batch_fields})
 
     return {
@@ -427,7 +428,7 @@ def create_work_item(
             document.append({"op": "add", "path": f"/multilineFieldsFormat/{name}", "value": "Markdown"})
 
     encoded_type = urllib.parse.quote(type)
-    url = f"{devops_api_url}/_apis/wit/workitems/${encoded_type}?api-version=7.1"
+    url = f"{devops_api_url}/_apis/wit/workitems/${encoded_type}?api-version={DEVOPS_API_VERSION}"
     if validate_only is not None:
         url += f"&validateOnly={'true' if validate_only else 'false'}"
 
@@ -494,7 +495,7 @@ def delete_work_item(
     ] = None,
 ) -> object:
     """Delete a work item, optionally destroying it permanently."""
-    url = f"{devops_api_url}/_apis/wit/workitems/{work_item_id}?api-version=7.1"
+    url = f"{devops_api_url}/_apis/wit/workitems/{work_item_id}?api-version={DEVOPS_API_VERSION}"
     if destroy:
         url += "&destroy=true"
     devops_api_delete(url)
@@ -516,7 +517,7 @@ def undelete_work_item(
     work_item_id: Annotated[int, "The numeric ID of the deleted work item to restore."],
 ) -> object:
     """Restore a soft-deleted work item from the Recycle Bin."""
-    url = f"{devops_api_url}/_apis/wit/recyclebin/{work_item_id}?api-version=7.1"
+    url = f"{devops_api_url}/_apis/wit/recyclebin/{work_item_id}?api-version={DEVOPS_API_VERSION}"
     return devops_api_patch(url, {"isDeleted": False})
 
 
