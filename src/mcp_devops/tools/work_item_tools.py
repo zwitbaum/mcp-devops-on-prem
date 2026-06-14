@@ -329,6 +329,70 @@ def get_work_item_type(
 
 
 @mcp.tool(
+    name="devops_work_item_query_by_wiql",
+    description=(
+        "Execute a WIQL (Work Item Query Language) query and return the matching work items."
+    ),
+    annotations={"readOnlyHint": True},
+)
+def query_work_items_by_wiql(
+    query: Annotated[
+        str,
+        (
+            "The WIQL query string. Example: "
+            "\"SELECT [System.Id], [System.Title], [System.State] "
+            "FROM WorkItems WHERE [System.WorkItemType] = 'Bug' "
+            "AND [System.State] <> 'Closed' ORDER BY [System.CreatedDate] DESC\""
+        ),
+    ],
+    top: Annotated[
+        Optional[int],
+        "Maximum number of results to return. Omit to use the server default.",
+    ] = None,
+    time_precision: Annotated[
+        Optional[bool],
+        "If True, use time precision for date comparisons in the query.",
+    ] = None,
+) -> object:
+    """Execute a WIQL query and return matching work items with the queried fields."""
+    wiql_url = f"{devops_api_url}/_apis/wit/wiql?api-version=7.1"
+    if top is not None:
+        wiql_url += f"&$top={top}"
+    if time_precision is not None:
+        wiql_url += f"&timePrecision={'true' if time_precision else 'false'}"
+
+    wiql_result = devops_api_post(wiql_url, {"query": query})
+
+    # For tree/oneHop queries the result has workItemRelations, not workItems
+    work_item_refs = wiql_result.get("workItems")
+    if not work_item_refs:
+        return wiql_result  # tree/oneHop or empty result — return as-is
+
+    ids = [ref["id"] for ref in work_item_refs]
+
+    _BATCH_LIMIT = 200
+    truncated = len(ids) > _BATCH_LIMIT
+    ids = ids[:_BATCH_LIMIT]
+
+    # Use exactly the columns from the WIQL SELECT clause
+    batch_fields = [col["referenceName"] for col in wiql_result.get("columns", [])]
+    if not batch_fields:
+        batch_fields = ["System.Id", "System.Title"]
+
+    batch_url = f"{devops_api_url}/_apis/wit/workitemsbatch?api-version=7.1"
+    batch_result = devops_api_post(batch_url, {"ids": ids, "fields": batch_fields})
+
+    return {
+        "queryType": wiql_result.get("queryType"),
+        "asOf": wiql_result.get("asOf"),
+        "count": len(ids),
+        "truncated": truncated,
+        "totalMatched": len(work_item_refs),
+        "workItems": batch_result.get("value", batch_result),
+    }
+
+
+@mcp.tool(
     name="devops_work_item_create",
     description="Create a new work item of the specified work item type.",
     annotations={"readOnlyHint": False},

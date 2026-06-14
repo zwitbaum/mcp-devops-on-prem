@@ -395,6 +395,24 @@ After saving your MCP configuration:
 
 If tools are visible and respond, setup is complete.
 
+## Updating
+
+### Ephemeral installation (`uvx @latest`)
+
+If you use `uvx mcp-devops-onpremise@latest` (the default for all quick-install and configuration examples in this guide), no action is needed. `uvx` checks PyPI for the latest version on every run and updates automatically.
+
+### Permanent installation (`pip install`)
+
+If you installed the server permanently outside an IDE, update it with:
+
+```
+pip install --upgrade mcp-devops-onpremise
+```
+
+### Check if a newer version is available
+
+Visit the [releases page on GitHub](https://github.com/zwitbaum/mcp-devops-on-prem/releases) or the [CHANGELOG](https://github.com/zwitbaum/mcp-devops-on-prem/blob/main/CHANGELOG.md).
+
 ## Troubleshooting
 
 ### MD4 Support (NTLM only)

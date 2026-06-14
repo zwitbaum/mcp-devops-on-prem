@@ -24,6 +24,8 @@ Many organizations use on-premise DevOps solutions such as TFS or Azure DevOps S
 
 This MCP server closes that gap and enables smooth integration with on-premise DevOps systems.
 
+This project is under active development, with features continuously added to meet current requirements. Community needs are highly valued — if you miss any features, please [submit an Issue](https://github.com/zwitbaum/mcp-devops-on-prem/issues). User-requested features are fast-tracked and will be prioritized and added as soon as possible.
+
 ## Key Advantages
 
 One of the most important features of this MCP server is **NTLM authentication** support. NTLM is required by many on-premises and enterprise environments where users authenticate with Windows domain credentials, either directly or over VPN. Most MCP servers for Azure DevOps target only cloud-hosted Azure DevOps Services with token-based auth and cannot connect to these environments.
@@ -114,27 +116,9 @@ For detailed setup instructions for each method, see [Authentication](docs/getti
 
 ## Updating
 
-### Check the current installed version
+All configuration examples use `mcp-devops-onpremise@latest`, which instructs `uvx` to fetch the latest version **automatically** on every run.
 
-**If you installed permanently (Option B):**
-
-```
-mcp-devops-onpremise --version
-```
-
-### Check if a newer version is available
-
-Visit the [releases page on GitHub](https://github.com/zwitbaum/mcp-devops-on-prem/releases) or the [CHANGELOG](https://github.com/zwitbaum/mcp-devops-on-prem/blob/main/CHANGELOG.md).
-
-### Update to the latest version
-
-**If you use `uvx` (Option A):** All configuration examples in this guide use `mcp-devops-onpremise@latest`. This instructs `uvx` to always check PyPI for the latest version and update automatically.
-
-**If you installed permanently (Option B):**
-
-```
-pip install --upgrade mcp-devops-onpremise
-```
+For permanent installs and release notes, see [Updating](docs/getting-started.md#updating) in the Getting Started guide.
 
 ## Available Tools
 
@@ -169,6 +153,7 @@ pip install --upgrade mcp-devops-onpremise
 | `devops_work_item_get` | Retrieve a work item (PBI, bug, task) by numeric ID. Returns a compact object with key fields, attachments (files and inline images), and linked items (work items, pull requests, commits) | ✅ |
 | `devops_work_item_attachment_get` | Download a work item attachment by its GUID, either saving locally or returning base64-encoded content | ✅ |
 | `devops_work_item_type_get` | Get the definition of a work item type by name (e.g. `Bug`, `User Story`) | ✅ |
+| `devops_work_item_query_by_wiql` | Execute a WIQL (Work Item Query Language) query and return matching work items | ✅ |
 | `devops_work_item_create` | Create a new work item with typed fields; Html is the default format | ❌ |
 | `devops_work_item_update` | Update fields on a work item using JSON Patch (add / replace / remove) | ❌ |
 | `devops_work_item_delete` | Delete a work item, moves to Recycle Bin by default; use `destroy=True` for permanent deletion (requires project permission) | ❌ |
