@@ -1,0 +1,24 @@
+# Smithery.ai configuration
+startCommand:
+  type: stdio
+  commandFunction: |-
+    (config) => ({
+      command: 'uvx',
+      args: ['mcp-devops-onpremise@latest']
+    })
+configSchema:
+  type: object
+  required:
+    - DEVOPS_API_URL
+    - DEVOPS_USERNAME
+    - DEVOPS_PASSWORD
+  properties:
+    DEVOPS_API_URL:
+      type: string
+      description: The base URL of your on-premise Azure DevOps Server (e.g., https://your-devops-server/your-organization/your-project)
+    DEVOPS_USERNAME:
+      type: string
+      description: Your Windows domain username (e.g., DOMAIN\\username)
+    DEVOPS_PASSWORD:
+      type: string
+      description: Your Windows password (or Personal Access Token (PAT), then without username)

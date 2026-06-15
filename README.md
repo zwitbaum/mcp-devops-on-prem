@@ -24,7 +24,7 @@ Many organizations use on-premise DevOps solutions such as TFS or Azure DevOps S
 
 This MCP server closes that gap and enables smooth integration with on-premise DevOps systems.
 
-This project is under active development, with features continuously added to meet current requirements. Community needs are highly valued — if you miss any features, please [submit an Issue](https://github.com/zwitbaum/mcp-devops-on-prem/issues). User-requested features are fast-tracked and will be prioritized and added as soon as possible.
+This project is under active development, with features continuously added to meet current requirements. Community needs are highly valued — if you miss any features, please submit an [Issue](../../issues). User-requested features are fast-tracked and will be prioritized and added as soon as possible.
 
 ## Key Advantages
 
