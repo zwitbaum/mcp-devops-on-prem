@@ -1,24 +1,589 @@
-# Smithery.ai configuration
 startCommand:
   type: stdio
+  configSchema:
+    type: object
+    required:
+      - DEVOPS_API_URL
+      - DEVOPS_USERNAME
+      - DEVOPS_PASSWORD
+    properties:
+      DEVOPS_API_URL:
+        type: string
+        description: The base URL of your on-premise Azure DevOps Server (e.g., https://your-devops-server/your-organization/your-project)
+      DEVOPS_USERNAME:
+        type: string
+        description: Your Windows domain username (e.g., DOMAIN\\username)
+      DEVOPS_PASSWORD:
+        type: string
+        description: Your Windows password (or Personal Access Token (PAT), then without username)
   commandFunction: |-
     (config) => ({
       command: 'uvx',
-      args: ['mcp-devops-onpremise@latest']
+      args: ['mcp-devops-onpremise@latest'],
+      env: {
+        DEVOPS_API_URL: config.DEVOPS_API_URL,
+        DEVOPS_USERNAME: config.DEVOPS_USERNAME,
+        DEVOPS_PASSWORD: config.DEVOPS_PASSWORD
+      }
     })
-configSchema:
-  type: object
-  required:
-    - DEVOPS_API_URL
-    - DEVOPS_USERNAME
-    - DEVOPS_PASSWORD
-  properties:
-    DEVOPS_API_URL:
-      type: string
-      description: The base URL of your on-premise Azure DevOps Server (e.g., https://your-devops-server/your-organization/your-project)
-    DEVOPS_USERNAME:
-      type: string
-      description: Your Windows domain username (e.g., DOMAIN\\username)
-    DEVOPS_PASSWORD:
-      type: string
-      description: Your Windows password (or Personal Access Token (PAT), then without username)
+
+# Static tool list — bypasses Smithery's dynamic scanning, which cannot run
+# this server without the required credentials.
+tools:
+  - name: devops_pull_request_get
+    description: "Retrieve a pull request by ID. Use the 'lastMergeTargetCommit' and 'lastMergeSourceCommit' from the result to obtain changes with 'devops_repository_diffs_commits' tool."
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        pull_request_id:
+          type: integer
+          description: The ID of the pull request to retrieve.
+      required: [repository_id, pull_request_id]
+
+  - name: devops_pull_request_list_threads
+    description: Retrieve a hierarchical list of non-deleted comment threads and their text comments for a pull request.
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        pull_request_id:
+          type: integer
+          description: The ID of the pull request.
+      required: [repository_id, pull_request_id]
+
+  - name: devops_pull_request_list_thread_comments
+    description: Retrieves a list of non-deleted text comments in a specific thread.
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        pull_request_id:
+          type: integer
+          description: The ID of the pull request.
+        thread_id:
+          type: integer
+          description: The ID of the thread to retrieve.
+      required: [repository_id, pull_request_id, thread_id]
+
+  - name: devops_pull_request_create_comment
+    description: Create a new thread with initial comment in the specified pull request.
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        pull_request_id:
+          type: integer
+          description: Pull request ID.
+        comment_content:
+          type: string
+          description: The text content or markdown of the comment.
+        file_path:
+          type: string
+          description: File path relative to the root of the repository.
+          default: null
+        line_number:
+          type: integer
+          description: Optional 1-based line number for an inline comment.
+          default: null
+      required: [repository_id, pull_request_id, comment_content]
+
+  - name: devops_pull_request_reply_comment
+    description: Replies to a specific comment on a pull request.
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        pull_request_id:
+          type: integer
+          description: Pull request ID.
+        thread_id:
+          type: integer
+          description: Thread ID to reply to.
+        comment_content:
+          type: string
+          description: The text content or markdown of the reply comment.
+      required: [repository_id, pull_request_id, thread_id, comment_content]
+
+  - name: devops_pull_request_update_thread
+    description: Update the status of a comment thread.
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        pull_request_id:
+          type: integer
+          description: Pull request ID.
+        thread_id:
+          type: integer
+          description: Thread ID to update.
+        status:
+          type: integer
+          description: "New thread status (1=Active, 2=Fixed or Resolved, 3=WontFix, 4=Closed, 6=Pending)."
+      required: [repository_id, pull_request_id, thread_id, status]
+
+  - name: devops_pull_request_update_comment
+    description: Update an existing comment in the specified pull request.
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        pull_request_id:
+          type: integer
+          description: Pull request ID.
+        thread_id:
+          type: integer
+          description: Thread ID to update.
+        comment_id:
+          type: integer
+          description: ID of the comment to update.
+        parent_comment_id:
+          type: integer
+          description: Parent comment id for replies.
+        comment_content:
+          type: string
+          description: Updated text content.
+      required: [repository_id, pull_request_id, thread_id, comment_id, parent_comment_id, comment_content]
+
+  - name: devops_pull_request_delete_comment
+    description: Delete a comment from the specified pull request.
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        pull_request_id:
+          type: integer
+          description: Pull request ID.
+        thread_id:
+          type: integer
+          description: Thread ID.
+        comment_id:
+          type: integer
+          description: Comment ID to delete.
+      required: [repository_id, pull_request_id, thread_id, comment_id]
+
+  - name: devops_repository_list
+    description: Get the list of repositories.
+    inputSchema:
+      type: object
+      properties: {}
+
+  - name: devops_repository_get
+    description: Retrieve repository details by repository name or ID.
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+      required: [repository_id]
+
+  - name: devops_repository_commit_changes
+    description: "Retrieve a list of files changed in the specified commit, including the type of change for each file (e.g., add, edit, remove)."
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        commit_id:
+          type: string
+          description: Full 40-character commit SHA (hex string).
+      required: [repository_id, commit_id]
+
+  - name: devops_repository_diffs_commits
+    description: Get the difference between the base and target commits.
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        base_commit:
+          type: string
+          description: "Base commit SHA — full 40-character hex (e.g. lastMergeTargetCommit)."
+        target_commit:
+          type: string
+          description: "Target commit SHA — full 40-character hex (e.g. lastMergeSourceCommit)."
+      required: [repository_id, base_commit, target_commit]
+
+  - name: devops_repository_item_content
+    description: Get raw file content for a repository path at a specific version.
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        path:
+          type: string
+          description: "Path of the item, e.g. src/foo.cs"
+        version:
+          type: string
+          description: Commit ID to fetch the file from.
+      required: [repository_id, path, version]
+
+  - name: devops_get_item_content_diff
+    description: "Get textual diff between two versions of a file (changed hunks only). Lines are numbered; added lines are prefixed with '+', and removed with '-'. For full content of a specific file, use the item content tool with target version."
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        path:
+          type: string
+          description: "Path of the file to diff, e.g. src/foo.cs"
+        base_version:
+          type: string
+          description: "Base commit ID, e.g. lastMergeTargetCommit."
+        target_version:
+          type: string
+          description: "Target commit ID, e.g. lastMergeSourceCommit."
+      required: [repository_id, path, base_version, target_version]
+
+  - name: devops_wiki_page_get_by_url
+    description: Retrieves metadata (incl. id, path) and/or content of a wiki page using its URL.
+    inputSchema:
+      type: object
+      properties:
+        wiki_url:
+          type: string
+          description: Full URL of the wiki page.
+        include_content:
+          type: boolean
+          description: Whether to include the page content. Defaults to false.
+          default: false
+      required: [wiki_url]
+
+  - name: devops_wiki_page_create_or_update
+    description: Create or update a wiki page under the specified parent page.
+    inputSchema:
+      type: object
+      properties:
+        organization:
+          type: string
+          description: DevOps organization name.
+        project:
+          type: string
+          description: DevOps project name.
+        wiki_id:
+          type: string
+          description: Wiki identifier (name or ID).
+        parent_path:
+          type: string
+          description: "Relative path of the parent wiki page, or '/' for root."
+        title:
+          type: string
+          description: Title of the new wiki page. If a page with the same title already exists under the parent, it will be updated.
+        content:
+          type: string
+          description: Page content in markdown.
+          default: ""
+      required: [organization, project, wiki_id, parent_path, title]
+
+  - name: devops_wiki_page_update
+    description: Update an existing wiki page.
+    inputSchema:
+      type: object
+      properties:
+        organization:
+          type: string
+          description: DevOps organization name.
+        project:
+          type: string
+          description: DevOps project name.
+        wiki_id:
+          type: string
+          description: Wiki identifier (name or ID).
+        page_id:
+          type: integer
+          description: Wiki page ID.
+        content:
+          type: string
+          description: New content for the wiki page (optional).
+          default: ""
+      required: [organization, project, wiki_id, page_id]
+
+  - name: devops_wiki_page_delete
+    description: Delete an existing wiki page.
+    inputSchema:
+      type: object
+      properties:
+        organization:
+          type: string
+          description: DevOps organization name.
+        project:
+          type: string
+          description: DevOps project name.
+        wiki_id:
+          type: string
+          description: Wiki identifier (name or ID).
+        page_id:
+          type: integer
+          description: Wiki page ID.
+        comment:
+          type: string
+          description: Optional comment for deleting the wiki page.
+          default: ""
+      required: [organization, project, wiki_id, page_id]
+
+  - name: devops_work_item_get
+    description: "Retrieve a single work item by numeric ID. Returns a compact object with key fields (title, state, type, assignee, description, acceptance criteria, tags, parent), plus attachments (files and inline images) and linked items (work items, pull requests, commits)."
+    inputSchema:
+      type: object
+      properties:
+        work_item_id:
+          type: integer
+          description: The numeric work item ID to fetch.
+      required: [work_item_id]
+
+  - name: devops_work_item_attachment_get
+    description: "Download a work item attachment by specified ID. Returns base64-encoded content, or saves to a local directory if savePath is provided."
+    inputSchema:
+      type: object
+      properties:
+        attachment_id:
+          type: string
+          description: The GUID of the attachment.
+        file_name:
+          type: string
+          description: The file name of the attachment. Used to determine the MIME type.
+        save_path:
+          type: string
+          description: "Optional directory path to save the file to. If omitted, returns the content as a base64-encoded resource."
+          default: null
+      required: [attachment_id, file_name]
+
+  - name: devops_work_item_type_get
+    description: Get definition for the specified work item type.
+    inputSchema:
+      type: object
+      properties:
+        type:
+          type: string
+          description: "Work item type name (e.g. 'Bug', 'User Story')."
+      required: [type]
+
+  - name: devops_work_item_query_by_wiql
+    description: Execute a WIQL (Work Item Query Language) query and return the matching work items.
+    inputSchema:
+      type: object
+      properties:
+        query:
+          type: string
+          description: "The WIQL query string. Example: \"SELECT [System.Id], [System.Title], [System.State] FROM WorkItems WHERE [System.WorkItemType] = 'Bug' AND [System.State] <> 'Closed' ORDER BY [System.CreatedDate] DESC\""
+        top:
+          type: integer
+          description: Maximum number of results to return. Omit to use the server default.
+          default: null
+        time_precision:
+          type: boolean
+          description: If True, use time precision for date comparisons in the query.
+          default: null
+      required: [query]
+
+  - name: devops_work_item_create
+    description: Create a new work item of the specified work item type.
+    inputSchema:
+      type: object
+      properties:
+        type:
+          type: string
+          description: "The work item type to create, e.g. 'Task', 'Bug', 'User Story'."
+        fields:
+          type: array
+          description: "List of field objects to set on the new work item. Each entry must have 'name' (field reference name, e.g. 'System.Title') and 'value'."
+          items:
+            type: object
+            additionalProperties: true
+        validate_only:
+          type: boolean
+          description: If True, validate the input against system rules without saving the work item (dry run).
+          default: null
+      required: [type, fields]
+
+  - name: devops_work_item_update
+    description: Update fields on a work item by ID.
+    inputSchema:
+      type: object
+      properties:
+        work_item_id:
+          type: integer
+          description: The numeric work item ID to update.
+        updates:
+          type: array
+          description: "List of field updates to apply. Each entry must have: 'op' (one of 'add', 'replace', 'remove'), 'name' (field reference name, e.g. 'System.Title'), and 'value'."
+          items:
+            type: object
+            additionalProperties: true
+        validate_only:
+          type: boolean
+          description: If True, validate the input without saving the work item (dry run).
+          default: null
+      required: [work_item_id, updates]
+
+  - name: devops_work_item_delete
+    description: "Delete a work item by ID. By default the item is sent to the Recycle Bin and can be restored. Set destroy=True to permanently destroy the item — WARNING: this is irreversible."
+    inputSchema:
+      type: object
+      properties:
+        work_item_id:
+          type: integer
+          description: The numeric ID of the work item to delete.
+        destroy:
+          type: boolean
+          description: "If True, permanently destroys the work item. WARNING: permanent destruction cannot be undone. Defaults to False (moves to Recycle Bin)."
+          default: null
+      required: [work_item_id]
+
+  - name: devops_work_item_undelete
+    description: Restore a work item from the Recycle Bin by ID. Only works for items deleted without the destroy flag.
+    inputSchema:
+      type: object
+      properties:
+        work_item_id:
+          type: integer
+          description: The numeric ID of the deleted work item to restore.
+      required: [work_item_id]
+
+  - name: devops_work_item_link_update
+    description: "Add or remove a relation link between two work items. Use op='add' (default) to create a new link, op='remove' to delete an existing one. To change a link type, call remove then add."
+    inputSchema:
+      type: object
+      properties:
+        work_item_id:
+          type: integer
+          description: The numeric ID of the work item to modify.
+        link_to_id:
+          type: integer
+          description: The numeric ID of the work item to link to or unlink from.
+        op:
+          type: string
+          description: "Operation to perform: 'add' (default) to create the link, 'remove' to delete it."
+          default: add
+        link_type:
+          type: string
+          description: "Type of link. One of: 'parent', 'child', 'related', 'duplicate', 'duplicate of', 'successor', 'predecessor', 'tested by', 'tests', 'affects', 'affected by'. Defaults to 'related'."
+          default: related
+        comment:
+          type: string
+          description: Optional comment to attach to the link. Only used when op='add'.
+          default: null
+        validate_only:
+          type: boolean
+          description: If True, validate without saving (dry run).
+          default: null
+      required: [work_item_id, link_to_id]
+
+  - name: devops_work_item_artifact_link_update
+    description: "Add or remove an artifact link (Pull Request, Build, Commit, Branch, Changeset, Versioned Item) on a work item. Use op='add' (default) to attach, op='remove' to detach. The artifact_id format depends on link_type."
+    inputSchema:
+      type: object
+      properties:
+        work_item_id:
+          type: integer
+          description: The numeric ID of the work item to modify.
+        link_type:
+          type: string
+          description: "Supported: 'Pull Request', 'Build', 'Found in build', 'Integrated in build', 'Commit', 'Branch', 'Changeset', 'Versioned Item'."
+        artifact_id:
+          type: string
+          description: "Artifact identifier — format depends on link_type: Git-based: '{project_id}/{repo_id}/{detail}'; Build: '{build_id}'; Changeset: '{changeset_id}'."
+        op:
+          type: string
+          description: "Operation to perform: 'add' (default) to attach the artifact link, 'remove' to detach it."
+          default: add
+        comment:
+          type: string
+          description: Optional comment to attach to the link. Only used when op='add'.
+          default: null
+        validate_only:
+          type: boolean
+          description: If True, validate without saving (dry run).
+          default: null
+      required: [work_item_id, link_type, artifact_id]
+
+  - name: devops_work_item_comment_list
+    description: "List comments on a work item. Returns up to `top` comments (default 50)."
+    inputSchema:
+      type: object
+      properties:
+        work_item_id:
+          type: integer
+          description: The numeric work item ID.
+        top:
+          type: integer
+          description: Maximum number of comments to return. Defaults to 50.
+          default: 50
+        format:
+          type: string
+          description: "Response format: 'html' (default) or 'markdown'."
+          default: html
+      required: [work_item_id]
+
+  - name: devops_work_item_comment_add
+    description: Add a comment to a work item.
+    inputSchema:
+      type: object
+      properties:
+        work_item_id:
+          type: integer
+          description: The numeric work item ID.
+        text:
+          type: string
+          description: The comment text (Html or Markdown depending on format).
+        format:
+          type: string
+          description: "Format of the comment text: 'html' (default) or 'markdown'."
+          default: html
+      required: [work_item_id, text]
+
+  - name: devops_work_item_comment_update
+    description: Update an existing comment on a work item.
+    inputSchema:
+      type: object
+      properties:
+        work_item_id:
+          type: integer
+          description: The numeric work item ID.
+        comment_id:
+          type: integer
+          description: The numeric ID of the comment to update.
+        text:
+          type: string
+          description: The updated comment text.
+        format:
+          type: string
+          description: "Format of the comment text: 'html' (default) or 'markdown'."
+          default: html
+      required: [work_item_id, comment_id, text]
+
+  - name: devops_work_item_comment_delete
+    description: Delete a comment from a work item.
+    inputSchema:
+      type: object
+      properties:
+        work_item_id:
+          type: integer
+          description: The numeric work item ID.
+        comment_id:
+          type: integer
+          description: The numeric ID of the comment to delete.
+      required: [work_item_id, comment_id]
