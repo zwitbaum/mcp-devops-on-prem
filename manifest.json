@@ -1,0 +1,467 @@
+{
+  "manifest_version": "0.3",
+  "name": "mcp-devops-onpremise",
+  "display_name": "DevOps On-Premises",
+  "version": "1.0.0",
+  "description": "MCP server for on-premises Azure DevOps — browse repositories, pull requests, work items, and wikis.",
+  "long_description": "Connect your AI agent to an on-premises Azure DevOps Server (TFS). Supports browsing repositories, diffing pull requests, reading and creating work items, managing wiki pages, and more.\n\nRequires network access to your internal DevOps server.",
+  "author": {
+    "name": "zwitbaum",
+    "url": "https://github.com/zwitbaum"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zwitbaum/mcp-devops-on-prem.git"
+  },
+  "homepage": "https://github.com/zwitbaum/mcp-devops-on-prem",
+  "documentation": "https://zwitbaum.github.io/mcp-devops-on-prem",
+  "support": "https://github.com/zwitbaum/mcp-devops-on-prem/issues",
+  "license": "Apache-2.0",
+  "keywords": ["azure-devops", "on-premise", "tfs", "devops", "pull-request", "work-item", "wiki"],
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"]
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "src/mcp_devops/__init__.py",
+    "mcp_config": {
+      "command": "uvx",
+      "args": ["mcp-devops-onpremise@latest"],
+      "env": {
+        "DEVOPS_API_URL": "${user_config.DEVOPS_API_URL}",
+        "DEVOPS_USERNAME": "${user_config.DEVOPS_USERNAME}",
+        "DEVOPS_PASSWORD": "${user_config.DEVOPS_PASSWORD}"
+      }
+    }
+  },
+  "user_config": {
+    "DEVOPS_API_URL": {
+      "type": "string",
+      "title": "DevOps Server URL",
+      "description": "Base URL of your Azure DevOps Server, including organization and project (e.g. https://devops.company.com/MyOrg/MyProject)",
+      "required": true
+    },
+    "DEVOPS_USERNAME": {
+      "type": "string",
+      "title": "Username",
+      "description": "Windows domain username (e.g. DOMAIN\\username), or leave empty when using a PAT",
+      "required": true
+    },
+    "DEVOPS_PASSWORD": {
+      "type": "string",
+      "title": "Password / PAT",
+      "description": "Windows password, or a Personal Access Token (PAT). When using a PAT, leave Username empty.",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "tools": [
+    {
+      "name": "devops_pull_request_get",
+      "description": "Retrieve a pull request by ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "pull_request_id": { "type": "integer", "description": "The ID of the pull request to retrieve." }
+        },
+        "required": ["repository_id", "pull_request_id"]
+      }
+    },
+    {
+      "name": "devops_pull_request_list_threads",
+      "description": "List comment threads on a pull request.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "pull_request_id": { "type": "integer", "description": "The ID of the pull request." }
+        },
+        "required": ["repository_id", "pull_request_id"]
+      }
+    },
+    {
+      "name": "devops_pull_request_list_thread_comments",
+      "description": "List comments in a specific PR thread.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "pull_request_id": { "type": "integer", "description": "The ID of the pull request." },
+          "thread_id": { "type": "integer", "description": "The ID of the thread to retrieve." }
+        },
+        "required": ["repository_id", "pull_request_id", "thread_id"]
+      }
+    },
+    {
+      "name": "devops_pull_request_create_comment",
+      "description": "Create a new comment thread on a pull request.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "pull_request_id": { "type": "integer", "description": "Pull request ID." },
+          "comment_content": { "type": "string", "description": "The text content or markdown of the comment." },
+          "file_path": { "type": "string", "description": "File path relative to the root of the repository." },
+          "line_number": { "type": "integer", "description": "Optional 1-based line number for an inline comment." }
+        },
+        "required": ["repository_id", "pull_request_id", "comment_content"]
+      }
+    },
+    {
+      "name": "devops_pull_request_reply_comment",
+      "description": "Reply to an existing PR comment thread.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "pull_request_id": { "type": "integer", "description": "Pull request ID." },
+          "thread_id": { "type": "integer", "description": "Thread ID to reply to." },
+          "comment_content": { "type": "string", "description": "The text content or markdown of the reply." }
+        },
+        "required": ["repository_id", "pull_request_id", "thread_id", "comment_content"]
+      }
+    },
+    {
+      "name": "devops_pull_request_update_thread",
+      "description": "Update the status of a PR comment thread.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "pull_request_id": { "type": "integer", "description": "Pull request ID." },
+          "thread_id": { "type": "integer", "description": "Thread ID to update." },
+          "status": { "type": "integer", "description": "New thread status (1=Active, 2=Resolved, 3=WontFix, 4=Closed, 6=Pending)." }
+        },
+        "required": ["repository_id", "pull_request_id", "thread_id", "status"]
+      }
+    },
+    {
+      "name": "devops_pull_request_update_comment",
+      "description": "Update an existing PR comment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "pull_request_id": { "type": "integer", "description": "Pull request ID." },
+          "thread_id": { "type": "integer", "description": "Thread ID." },
+          "comment_id": { "type": "integer", "description": "ID of the comment to update." },
+          "parent_comment_id": { "type": "integer", "description": "Parent comment ID for replies." },
+          "comment_content": { "type": "string", "description": "Updated text content." }
+        },
+        "required": ["repository_id", "pull_request_id", "thread_id", "comment_id", "parent_comment_id", "comment_content"]
+      }
+    },
+    {
+      "name": "devops_pull_request_delete_comment",
+      "description": "Delete a PR comment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "pull_request_id": { "type": "integer", "description": "Pull request ID." },
+          "thread_id": { "type": "integer", "description": "Thread ID." },
+          "comment_id": { "type": "integer", "description": "Comment ID to delete." }
+        },
+        "required": ["repository_id", "pull_request_id", "thread_id", "comment_id"]
+      }
+    },
+    {
+      "name": "devops_repository_list",
+      "description": "List all repositories.",
+      "inputSchema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "devops_repository_get",
+      "description": "Get repository details by name or ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." }
+        },
+        "required": ["repository_id"]
+      }
+    },
+    {
+      "name": "devops_repository_commit_changes",
+      "description": "List files changed in a commit.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "commit_id": { "type": "string", "description": "Full 40-character commit SHA." }
+        },
+        "required": ["repository_id", "commit_id"]
+      }
+    },
+    {
+      "name": "devops_repository_diffs_commits",
+      "description": "Diff two commits.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "base_commit": { "type": "string", "description": "Base commit SHA (e.g. lastMergeTargetCommit)." },
+          "target_commit": { "type": "string", "description": "Target commit SHA (e.g. lastMergeSourceCommit)." }
+        },
+        "required": ["repository_id", "base_commit", "target_commit"]
+      }
+    },
+    {
+      "name": "devops_repository_item_content",
+      "description": "Get raw file content at a specific commit.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "path": { "type": "string", "description": "Path of the item, e.g. src/foo.cs" },
+          "version": { "type": "string", "description": "Commit ID to fetch the file from." }
+        },
+        "required": ["repository_id", "path", "version"]
+      }
+    },
+    {
+      "name": "devops_get_item_content_diff",
+      "description": "Get line-level text diff of a file between two commits.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository_id": { "type": "string", "description": "Repository name or ID." },
+          "path": { "type": "string", "description": "Path of the file to diff." },
+          "base_version": { "type": "string", "description": "Base commit ID." },
+          "target_version": { "type": "string", "description": "Target commit ID." }
+        },
+        "required": ["repository_id", "path", "base_version", "target_version"]
+      }
+    },
+    {
+      "name": "devops_wiki_page_get_by_url",
+      "description": "Get wiki page metadata and content by URL.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "wiki_url": { "type": "string", "description": "Full URL of the wiki page." },
+          "include_content": { "type": "boolean", "description": "Whether to include page content. Defaults to false." }
+        },
+        "required": ["wiki_url"]
+      }
+    },
+    {
+      "name": "devops_wiki_page_create_or_update",
+      "description": "Create or update a wiki page.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "organization": { "type": "string", "description": "DevOps organization name." },
+          "project": { "type": "string", "description": "DevOps project name." },
+          "wiki_id": { "type": "string", "description": "Wiki identifier (name or ID)." },
+          "parent_path": { "type": "string", "description": "Relative path of the parent wiki page, or '/' for root." },
+          "title": { "type": "string", "description": "Title of the wiki page." },
+          "content": { "type": "string", "description": "Page content in markdown." }
+        },
+        "required": ["organization", "project", "wiki_id", "parent_path", "title"]
+      }
+    },
+    {
+      "name": "devops_wiki_page_update",
+      "description": "Update an existing wiki page by ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "organization": { "type": "string", "description": "DevOps organization name." },
+          "project": { "type": "string", "description": "DevOps project name." },
+          "wiki_id": { "type": "string", "description": "Wiki identifier (name or ID)." },
+          "page_id": { "type": "integer", "description": "Wiki page ID." },
+          "content": { "type": "string", "description": "New content for the wiki page." }
+        },
+        "required": ["organization", "project", "wiki_id", "page_id"]
+      }
+    },
+    {
+      "name": "devops_wiki_page_delete",
+      "description": "Delete a wiki page by ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "organization": { "type": "string", "description": "DevOps organization name." },
+          "project": { "type": "string", "description": "DevOps project name." },
+          "wiki_id": { "type": "string", "description": "Wiki identifier (name or ID)." },
+          "page_id": { "type": "integer", "description": "Wiki page ID." },
+          "comment": { "type": "string", "description": "Optional deletion comment." }
+        },
+        "required": ["organization", "project", "wiki_id", "page_id"]
+      }
+    },
+    {
+      "name": "devops_work_item_get",
+      "description": "Get a work item by numeric ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "work_item_id": { "type": "integer", "description": "The numeric work item ID to fetch." }
+        },
+        "required": ["work_item_id"]
+      }
+    },
+    {
+      "name": "devops_work_item_attachment_get",
+      "description": "Download a work item attachment by ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "attachment_id": { "type": "string", "description": "The GUID of the attachment." },
+          "file_name": { "type": "string", "description": "The file name of the attachment." },
+          "save_path": { "type": "string", "description": "Optional local directory path to save the file." }
+        },
+        "required": ["attachment_id", "file_name"]
+      }
+    },
+    {
+      "name": "devops_work_item_type_get",
+      "description": "Get a work item type definition.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "description": "Work item type name (e.g. 'Bug', 'User Story')." }
+        },
+        "required": ["type"]
+      }
+    },
+    {
+      "name": "devops_work_item_query_by_wiql",
+      "description": "Run a WIQL query and return matching work items.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "The WIQL query string." },
+          "top": { "type": "integer", "description": "Maximum number of results to return." }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "devops_work_item_create",
+      "description": "Create a new work item.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "description": "The work item type to create, e.g. 'Task', 'Bug'." },
+          "fields": { "type": "array", "description": "List of field objects with 'name' and 'value'.", "items": { "type": "object" } }
+        },
+        "required": ["type", "fields"]
+      }
+    },
+    {
+      "name": "devops_work_item_update",
+      "description": "Update fields on a work item.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "work_item_id": { "type": "integer", "description": "The numeric work item ID to update." },
+          "updates": { "type": "array", "description": "List of field update objects.", "items": { "type": "object" } }
+        },
+        "required": ["work_item_id", "updates"]
+      }
+    },
+    {
+      "name": "devops_work_item_delete",
+      "description": "Delete a work item (to Recycle Bin or permanently).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "work_item_id": { "type": "integer", "description": "The numeric ID of the work item to delete." },
+          "destroy": { "type": "boolean", "description": "If true, permanently destroys the item. WARNING: irreversible." }
+        },
+        "required": ["work_item_id"]
+      }
+    },
+    {
+      "name": "devops_work_item_undelete",
+      "description": "Restore a work item from the Recycle Bin.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "work_item_id": { "type": "integer", "description": "The numeric ID of the deleted work item to restore." }
+        },
+        "required": ["work_item_id"]
+      }
+    },
+    {
+      "name": "devops_work_item_link_update",
+      "description": "Add or remove a relation link between work items.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "work_item_id": { "type": "integer", "description": "The numeric ID of the work item to modify." },
+          "link_to_id": { "type": "integer", "description": "The numeric ID of the work item to link to or unlink from." },
+          "op": { "type": "string", "description": "'add' (default) or 'remove'." },
+          "link_type": { "type": "string", "description": "Type of link, e.g. 'parent', 'child', 'related'." }
+        },
+        "required": ["work_item_id", "link_to_id"]
+      }
+    },
+    {
+      "name": "devops_work_item_artifact_link_update",
+      "description": "Add or remove an artifact link on a work item.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "work_item_id": { "type": "integer", "description": "The numeric ID of the work item to modify." },
+          "link_type": { "type": "string", "description": "Supported: 'Pull Request', 'Build', 'Commit', 'Branch', etc." },
+          "artifact_id": { "type": "string", "description": "Artifact identifier, format depends on link_type." },
+          "op": { "type": "string", "description": "'add' (default) or 'remove'." }
+        },
+        "required": ["work_item_id", "link_type", "artifact_id"]
+      }
+    },
+    {
+      "name": "devops_work_item_comment_list",
+      "description": "List comments on a work item.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "work_item_id": { "type": "integer", "description": "The numeric work item ID." },
+          "top": { "type": "integer", "description": "Maximum number of comments to return. Defaults to 50." }
+        },
+        "required": ["work_item_id"]
+      }
+    },
+    {
+      "name": "devops_work_item_comment_add",
+      "description": "Add a comment to a work item.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "work_item_id": { "type": "integer", "description": "The numeric work item ID." },
+          "text": { "type": "string", "description": "The comment text." }
+        },
+        "required": ["work_item_id", "text"]
+      }
+    },
+    {
+      "name": "devops_work_item_comment_update",
+      "description": "Update an existing work item comment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "work_item_id": { "type": "integer", "description": "The numeric work item ID." },
+          "comment_id": { "type": "integer", "description": "The numeric ID of the comment to update." },
+          "text": { "type": "string", "description": "The updated comment text." }
+        },
+        "required": ["work_item_id", "comment_id", "text"]
+      }
+    },
+    {
+      "name": "devops_work_item_comment_delete",
+      "description": "Delete a work item comment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "work_item_id": { "type": "integer", "description": "The numeric work item ID." },
+          "comment_id": { "type": "integer", "description": "The numeric ID of the comment to delete." }
+        },
+        "required": ["work_item_id", "comment_id"]
+      }
+    }
+  ]
+}

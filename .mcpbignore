@@ -1,0 +1,24 @@
+# Exclude everything that shouldn't be in the bundle
+.venv/
+.git/
+.github/
+.processing/
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.coverage
+.pytest_cache/
+.ruff_cache/
+tests/
+scripts/
+docs/
+dist/
+build/
+*.egg-info/
+.env
+.env.*
+*.mcpb
+node_modules/
+uv.lock

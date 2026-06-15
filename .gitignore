@@ -1,3 +1,6 @@
+# MCPB bundles (build artifacts)
+*.mcpb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
