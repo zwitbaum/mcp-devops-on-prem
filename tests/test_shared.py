@@ -14,6 +14,7 @@ from requests.auth import HTTPBasicAuth
 from requests_ntlm import HttpNtlmAuth
 
 from mcp_devops.shared import (
+    _decode_json_response,
     _get_auth_headers_and_kwargs,
     devops_api_delete,
     devops_api_get,
@@ -24,6 +25,7 @@ from mcp_devops.shared import (
     devops_api_put,
     fetch_work_item,
     get_base_api_url,
+    validate_configuration,
 )
 
 _TEST_URL = "https://devops.example.com/org/project/_apis/test"
@@ -114,6 +116,17 @@ class TestGetBaseApiUrl:
         url = get_base_api_url("MyOrg", "MyProject", "_apis/git/repositories")
 
         assert url == "https://devops.example.com/MyOrg/MyProject/_apis/git/repositories"
+
+
+class TestDecodeJsonResponse:
+    """Tests for shared JSON response decoding."""
+
+    def test_decodes_utf8_bom_json(self):
+        response = type("Response", (), {"content": b'\xef\xbb\xbf{"ok": true}'})()
+
+        result = _decode_json_response(response)
+
+        assert result == {"ok": True}
 
 
 class TestDevopsApiGet:
@@ -371,3 +384,77 @@ class TestDevopsApiGetBinary:
 
         assert isinstance(result, bytes)
         assert result == b"binarydata"
+
+
+class TestValidateConfiguration:
+    """Tests for startup environment validation."""
+
+    def test_accepts_ntlm_configuration(self, monkeypatch):
+        monkeypatch.setenv("DEVOPS_API_URL", "https://devops.example.com/org/project")
+        monkeypatch.setenv("DEVOPS_USERNAME", "DOMAIN\\alice")
+        monkeypatch.setenv("DEVOPS_PASSWORD", "secret")
+
+        validate_configuration()
+
+    def test_accepts_pat_configuration(self, monkeypatch):
+        monkeypatch.setenv("DEVOPS_API_URL", "https://devops.example.com/org/project")
+        monkeypatch.setenv("DEVOPS_PAT", "my-pat")
+
+        validate_configuration()
+
+    def test_accepts_bearer_token_configuration(self, monkeypatch):
+        monkeypatch.setenv("DEVOPS_API_URL", "https://devops.example.com/org/project")
+        monkeypatch.setenv("DEVOPS_TOKEN", "my-token")
+
+        validate_configuration()
+
+    def test_rejects_missing_api_url(self, monkeypatch):
+        monkeypatch.delenv("DEVOPS_API_URL", raising=False)
+        monkeypatch.setenv("DEVOPS_PAT", "my-pat")
+
+        with pytest.raises(ValueError, match="DEVOPS_API_URL is required"):
+            validate_configuration()
+
+    def test_rejects_invalid_api_url(self, monkeypatch):
+        monkeypatch.setenv("DEVOPS_API_URL", "not-a-url")
+        monkeypatch.setenv("DEVOPS_PAT", "my-pat")
+
+        with pytest.raises(ValueError, match="valid absolute http\(s\) URL"):
+            validate_configuration()
+
+    def test_rejects_missing_auth_configuration(self, monkeypatch):
+        monkeypatch.setenv("DEVOPS_API_URL", "https://devops.example.com/org/project")
+
+        with pytest.raises(ValueError, match="Configure exactly one auth mode"):
+            validate_configuration()
+
+    def test_rejects_partial_ntlm_username_only(self, monkeypatch):
+        monkeypatch.setenv("DEVOPS_API_URL", "https://devops.example.com/org/project")
+        monkeypatch.setenv("DEVOPS_USERNAME", "DOMAIN\\alice")
+
+        with pytest.raises(ValueError, match="NTLM configuration is incomplete"):
+            validate_configuration()
+
+    def test_rejects_partial_ntlm_password_only(self, monkeypatch):
+        monkeypatch.setenv("DEVOPS_API_URL", "https://devops.example.com/org/project")
+        monkeypatch.setenv("DEVOPS_PASSWORD", "secret")
+
+        with pytest.raises(ValueError, match="NTLM configuration is incomplete"):
+            validate_configuration()
+
+    def test_rejects_conflicting_pat_and_ntlm(self, monkeypatch):
+        monkeypatch.setenv("DEVOPS_API_URL", "https://devops.example.com/org/project")
+        monkeypatch.setenv("DEVOPS_PAT", "my-pat")
+        monkeypatch.setenv("DEVOPS_USERNAME", "DOMAIN\\alice")
+        monkeypatch.setenv("DEVOPS_PASSWORD", "secret")
+
+        with pytest.raises(ValueError, match="Conflicting auth configuration"):
+            validate_configuration()
+
+    def test_rejects_conflicting_token_and_pat(self, monkeypatch):
+        monkeypatch.setenv("DEVOPS_API_URL", "https://devops.example.com/org/project")
+        monkeypatch.setenv("DEVOPS_TOKEN", "my-token")
+        monkeypatch.setenv("DEVOPS_PAT", "my-pat")
+
+        with pytest.raises(ValueError, match="Conflicting auth configuration"):
+            validate_configuration()

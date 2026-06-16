@@ -1,4 +1,6 @@
+import json
 import os
+import sys
 from urllib.parse import urlparse
 
 import requests
@@ -66,6 +68,66 @@ def get_base_api_url(organization, project, api_path):
     return f"{devops_url}/{organization}/{project}/{api_path}"
 
 
+def validate_configuration() -> None:
+    """Validate required environment configuration for supported auth modes."""
+    api_url = os.getenv("DEVOPS_API_URL", "").strip()
+    username = os.getenv("DEVOPS_USERNAME", "")
+    password = os.getenv("DEVOPS_PASSWORD", "")
+    pat = os.getenv("DEVOPS_PAT", "")
+    token = os.getenv("DEVOPS_TOKEN", "")
+
+    if not api_url:
+        raise ValueError("DEVOPS_API_URL is required.")
+
+    parsed = urlparse(api_url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("DEVOPS_API_URL must be a valid absolute http(s) URL like https://server/org/project.")
+
+    has_username = bool(username)
+    has_password = bool(password)
+    has_pat = bool(pat)
+    has_token = bool(token)
+    has_ntlm = has_username or has_password
+
+    if has_username ^ has_password:
+        raise ValueError("NTLM configuration is incomplete: set both DEVOPS_USERNAME and DEVOPS_PASSWORD.")
+
+    configured_modes = sum((has_token, has_pat, has_ntlm))
+    if configured_modes == 0:
+        raise ValueError(
+            "Configure exactly one auth mode: DEVOPS_TOKEN, DEVOPS_PAT, or DEVOPS_USERNAME with DEVOPS_PASSWORD."
+        )
+    if configured_modes > 1:
+        raise ValueError(
+            "Conflicting auth configuration: set only one of DEVOPS_TOKEN, "
+            "DEVOPS_PAT, or DEVOPS_USERNAME with DEVOPS_PASSWORD."
+        )
+
+
+def _is_auth_debug_enabled() -> bool:
+    return os.getenv("DEVOPS_AUTH_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _debug_auth_selection(method: str, username: str | None = None) -> None:
+    if not _is_auth_debug_enabled():
+        return
+    password_present = bool(os.getenv("DEVOPS_PASSWORD"))
+    pat_present = bool(os.getenv("DEVOPS_PAT"))
+    token_present = bool(os.getenv("DEVOPS_TOKEN"))
+    api_url = os.getenv("DEVOPS_API_URL", "")
+    print(
+        "[DEVOPS AUTH DEBUG] "
+        f"method={method}; "
+        f"username={username or '<empty>'}; "
+        f"password_present={password_present}; "
+        f"pat_present={pat_present}; "
+        f"token_present={token_present}; "
+        f"api_url={api_url}",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 def _get_auth_headers_and_kwargs(extra_headers=None):
     """Return (headers, auth_or_none) for the configured auth strategy."""
     token = os.getenv("DEVOPS_TOKEN")
@@ -76,18 +138,27 @@ def _get_auth_headers_and_kwargs(extra_headers=None):
     auth = None
     if token:
         headers["Authorization"] = f"Bearer {token}"
+        _debug_auth_selection("bearer-token")
     elif pat:
         username = os.getenv("DEVOPS_USERNAME", "")
         auth = HTTPBasicAuth(username, pat)
+        _debug_auth_selection("pat", username=username)
     else:
-        auth = HttpNtlmAuth(os.getenv("DEVOPS_USERNAME"), os.getenv("DEVOPS_PASSWORD"))
+        username = os.getenv("DEVOPS_USERNAME")
+        auth = HttpNtlmAuth(username, os.getenv("DEVOPS_PASSWORD"))
+        _debug_auth_selection("ntlm", username=username)
     return headers, auth
+
+
+def _decode_json_response(response):
+    """Decode JSON responses, including Azure DevOps responses with a UTF-8 BOM."""
+    return json.loads(response.content.decode("utf-8-sig"))
 
 
 def devops_api_get(url, return_response=False):
     headers, auth = _get_auth_headers_and_kwargs()
     response = requests.get(url, headers=headers, auth=auth, timeout=DEFAULT_TIMEOUT)
-    return response if return_response else response.json()
+    return response if return_response else _decode_json_response(response)
 
 
 def devops_api_post(url, payload, extra_headers=None, return_response=False):
@@ -95,7 +166,7 @@ def devops_api_post(url, payload, extra_headers=None, return_response=False):
     if extra_headers:
         headers.update(extra_headers)
     response = requests.post(url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT)
-    return response if return_response else response.json()
+    return response if return_response else _decode_json_response(response)
 
 
 def devops_api_put(url, payload, extra_headers=None, return_response=False):
@@ -103,7 +174,7 @@ def devops_api_put(url, payload, extra_headers=None, return_response=False):
     if extra_headers:
         headers.update(extra_headers)
     response = requests.put(url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT)
-    return response if return_response else response.json()
+    return response if return_response else _decode_json_response(response)
 
 
 def devops_api_patch(url, payload, extra_headers=None, return_response=False):
@@ -111,7 +182,7 @@ def devops_api_patch(url, payload, extra_headers=None, return_response=False):
     if extra_headers:
         headers.update(extra_headers)
     response = requests.patch(url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT)
-    return response if return_response else response.json()
+    return response if return_response else _decode_json_response(response)
 
 
 def devops_api_delete(url):

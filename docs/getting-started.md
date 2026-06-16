@@ -328,6 +328,159 @@ The `DEVOPS_API_URL` must point to your full project URL:
 https://<your-devops-server>/<organization>/<project>
 ```
 
+### Choose a connection interface
+
+This server supports two connection interfaces:
+
+| Interface | When to use it | Recommended for end users | How it is configured |
+|---|---|---|---|
+| `stdio` | Normal IDE or MCP client integration. The client starts the server process itself. | Yes | Configure `command`, `args`, and `env` |
+| `streamable-http` / `http` | Local development, debugging, or manual testing when you want the server listening on a fixed host and port. | Usually no | Start the server separately, then configure the client with a URL |
+
+For most users, use `stdio`. It is the default MCP deployment model and avoids managing a separate background server process.
+
+Use HTTP only when you explicitly want to run the server yourself, for example while developing locally, testing with a fixed port, or inspecting traffic. For normal end-user IDE setup, HTTP adds an extra process to manage and is usually not necessary.
+
+### Configuration by interface and authentication method
+
+Authentication works the same way for both interfaces: the server process must receive the right `DEVOPS_*` environment variables. The difference is only where those variables are configured.
+
+#### `stdio` with NTLM
+
+Use this for normal local IDE usage in on-prem or VPN environments.
+
+```json
+{
+  "mcpServers": {
+    "devops-onprem": {
+      "command": "uvx",
+      "args": ["mcp-devops-onpremise@latest"],
+      "env": {
+        "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
+        "DEVOPS_USERNAME": "DOMAIN\\your-username",
+        "DEVOPS_PASSWORD": "your-password"
+      }
+    }
+  }
+}
+```
+
+#### `stdio` with PAT
+
+Use this when PAT authentication is enabled in your environment.
+
+```json
+{
+  "mcpServers": {
+    "devops-onprem": {
+      "command": "uvx",
+      "args": ["mcp-devops-onpremise@latest"],
+      "env": {
+        "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
+        "DEVOPS_PAT": "your-personal-access-token"
+      }
+    }
+  }
+}
+```
+
+#### `stdio` with OAuth bearer token
+
+Use this mainly for advanced automated environments where an OAuth token is already provided.
+
+```json
+{
+  "mcpServers": {
+    "devops-onprem": {
+      "command": "uvx",
+      "args": ["mcp-devops-onpremise@latest"],
+      "env": {
+        "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
+        "DEVOPS_TOKEN": "your-oauth-bearer-token"
+      }
+    }
+  }
+}
+```
+
+#### HTTP server with NTLM
+
+Use this for local development or test only. Start the server yourself:
+
+```powershell
+$env:DEVOPS_API_URL="https://your-devops-server/your-organization/your-project"
+$env:DEVOPS_USERNAME="DOMAIN\your-username"
+$env:DEVOPS_PASSWORD="your-password"
+uv run --directory <project-dir> mcp-devops-onpremise --transport http --host 127.0.0.1 --port 8000
+```
+
+Then configure the MCP client to connect to that URL:
+
+```json
+{
+  "servers": {
+    "DevOpsOnPremise": {
+      "type": "http",
+      "url": "http://127.0.0.1:8000"
+    }
+  }
+}
+```
+
+#### HTTP server with PAT
+
+Use the same HTTP client config, but start the server with PAT credentials in its environment:
+
+```powershell
+$env:DEVOPS_API_URL="https://your-devops-server/your-organization/your-project"
+$env:DEVOPS_PAT="your-personal-access-token"
+uv run --directory <project-dir> mcp-devops-onpremise --transport http --host 127.0.0.1 --port 8000
+```
+
+Client configuration:
+
+```json
+{
+  "servers": {
+    "DevOpsOnPremise": {
+      "type": "http",
+      "url": "http://127.0.0.1:8000"
+    }
+  }
+}
+```
+
+#### HTTP server with OAuth bearer token
+
+Again, the client still only needs the URL. The token must exist in the server process environment:
+
+```powershell
+$env:DEVOPS_API_URL="https://your-devops-server/your-organization/your-project"
+$env:DEVOPS_TOKEN="your-oauth-bearer-token"
+uv run --directory <project-dir> mcp-devops-onpremise --transport http --host 127.0.0.1 --port 8000
+```
+
+Client configuration:
+
+```json
+{
+  "servers": {
+    "DevOpsOnPremise": {
+      "type": "http",
+      "url": "http://127.0.0.1:8000"
+    }
+  }
+}
+```
+
+### Rules to choose the correct configuration
+
+- If your MCP client should start the server for you, use `stdio`.
+- If you want to run the server manually on a fixed local port, use HTTP.
+- If you use HTTP, put `DEVOPS_*` authentication variables where the server process is started, not in the MCP client URL configuration.
+- If you use `stdio`, put `DEVOPS_*` authentication variables in the MCP client server entry.
+- If you are an end user and do not need local debugging or a fixed port, prefer `stdio`.
+
 ### With NTLM (username + password)
 
 ```json
