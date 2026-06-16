@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-06-16
+
+### Added
+- added CLI transport selection for `stdio`, `streamable-http`, and `http`, with configurable host, port, and optional path
+- added validation of configuration: now fails fast at startup when `DEVOPS_API_URL` is missing/invalid or multiple auth modes are configured
+
+### Fixed
+- `_decode_json_response`: now handles Azure DevOps JSON responses with a UTF-8 BOM
+- `_normalize_mcp_url`: HTTP client connections now target the FastMCP `/mcp` endpoint automatically
+
+---
+
 ## [1.0.0] - 2026-06-15
 
 ### Added
@@ -64,7 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NTLM, PAT, and OAuth Bearer token authentication
 - GitHub Actions CI and PyPI publish workflows
 
-[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.3.0...v1.0.0
 [0.3.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.1.0...v0.2.0
