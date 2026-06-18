@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.1] - 2026-06-18
+
+### Fixed
+- packaging: added the PyPI README ownership marker required by the official MCP Registry verification
+- registry metadata: added a root `server.json` file using the current MCP Registry schema and field names
+
+---
+
 ## [1.1.0] - 2026-06-16
 
 ### Added
@@ -76,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NTLM, PAT, and OAuth Bearer token authentication
 - GitHub Actions CI and PyPI publish workflows
 
-[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.3.0...v1.0.0
 [0.3.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.2.0...v0.3.0

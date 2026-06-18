@@ -1,0 +1,51 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.zwitbaum/mcp-devops-on-prem",
+  "title": "DevOps On-Premises",
+  "description": "True MCP server for on-premises Azure DevOps (TFS): manage repositories, pull requests, work items, and wikis.",
+  "version": "1.1.1",
+  "license": "Apache-2.0",
+  "websiteUrl": "https://zwitbaum.github.io/mcp-devops-on-prem",
+  "repository": {
+    "url": "https://github.com/zwitbaum/mcp-devops-on-prem",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "mcp-devops-onpremise",
+      "version": "1.1.1",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "DEVOPS_API_URL",
+          "description": "Full Azure DevOps Server project URL, e.g. https://server/org/project",
+          "isRequired": true
+        },
+        {
+          "name": "DEVOPS_USERNAME",
+          "description": "NTLM username, usually DOMAIN\\username"
+        },
+        {
+          "name": "DEVOPS_PASSWORD",
+          "description": "NTLM password",
+          "isSecret": true
+        },
+        {
+          "name": "DEVOPS_PAT",
+          "description": "Personal Access Token for PAT authentication",
+          "isSecret": true
+        },
+        {
+          "name": "DEVOPS_TOKEN",
+          "description": "OAuth bearer token for bearer-token authentication",
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

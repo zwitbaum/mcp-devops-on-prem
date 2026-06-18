@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "mcp-devops-onpremise",
   "display_name": "DevOps On-Premises",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "MCP server for on-premises Azure DevOps — browse repositories, pull requests, work items, and wikis.",
   "long_description": "Connect your AI agent to an on-premises Azure DevOps Server (TFS). Supports browsing repositories, diffing pull requests, reading and creating work items, managing wiki pages, and more.\n\nRequires network access to your internal DevOps server.",
   "author": {

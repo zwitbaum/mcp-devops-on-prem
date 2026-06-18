@@ -4,6 +4,8 @@
 
 Model Context Protocol [MCP](https://modelcontextprotocol.io/) server for **on-premises Azure DevOps** that lets AI assistants browse repositories, review pull requests, manage work items, and interact with wikis.
 
+<!-- mcp-name: io.github.zwitbaum/mcp-devops-on-prem -->
+
 [![License: MIT](https://img.shields.io/badge/license-Apache%20License%202.0-blue)](https://opensource.org/licenses/apache-2.0)
 [![PyPI - Version](https://img.shields.io/pypi/v/mcp-devops-onpremise)](https://pypi.org/project/mcp-devops-onpremise)
 
