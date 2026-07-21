@@ -2,7 +2,6 @@
 
 Covers:
 - _get_auth_headers_and_kwargs() — all three auth paths
-- get_base_api_url() — pure URL builder
 - devops_api_get/post/put/patch/delete — HTTP method wrappers (return_response variants)
 - fetch_work_item() — conditional field extraction
 - devops_api_get_binary_stream/binary — binary download helpers
@@ -24,7 +23,6 @@ from mcp_devops.shared import (
     devops_api_post,
     devops_api_put,
     fetch_work_item,
-    get_base_api_url,
     validate_configuration,
 )
 
@@ -105,17 +103,6 @@ class TestGetAuthHeadersAndKwargs:
 
         assert headers["Content-Type"] == "application/json"
         assert headers["X-Custom"] == "value"
-
-
-class TestGetBaseApiUrl:
-    """Tests for the pure URL builder."""
-
-    def test_builds_correct_url(self, monkeypatch):
-        monkeypatch.setattr("mcp_devops.shared.devops_url", "https://devops.example.com")
-
-        url = get_base_api_url("MyOrg", "MyProject", "_apis/git/repositories")
-
-        assert url == "https://devops.example.com/MyOrg/MyProject/_apis/git/repositories"
 
 
 class TestDecodeJsonResponse:

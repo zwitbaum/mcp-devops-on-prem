@@ -167,11 +167,19 @@ For permanent installs and release notes, see [Updating](docs/getting-started.md
 | `devops_work_item_comment_update` | Update an existing comment on a work item | ❌ |
 | `devops_work_item_comment_delete` | Delete a comment from a work item | ❌ |
 
+### Search
+
+| Tool | Description | Read-only |
+|---|---|:---:|
+| `devops_code_search` | Search source code with optional repository, path, and branch filters | ✅ |
+| `devops_work_item_search` | Search work items with optional area, type, state, and assigned-to filters | ✅ |
+| `devops_wiki_search` | Search wiki pages with an optional wiki filter | ✅ |
+
 ### Wiki
 
 | Tool | Description | Read-only |
 |---|---|:---:|
-| `devops_wiki_page_get_by_url` | Get wiki page metadata (id, path) and optional content by its URL | ✅ |
+| `devops_wiki_page_get` | Get wiki page metadata and optional content by wiki ID and page ID | ✅ |
 | `devops_wiki_page_create_or_update` | Create or update a wiki page under a specified parent page | ❌ |
 | `devops_wiki_page_update` | Update an existing wiki page by ID | ❌ |
 | `devops_wiki_page_delete` | Delete an existing wiki page by ID | ❌ |

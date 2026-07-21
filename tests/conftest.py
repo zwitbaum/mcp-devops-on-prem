@@ -32,17 +32,5 @@ def devops_url(monkeypatch):
     monkeypatch.setattr("mcp_devops.tools.repository_tools.devops_api_url", TEST_BASE_URL)
     monkeypatch.setattr("mcp_devops.tools.pull_request_tools.devops_api_url", TEST_BASE_URL)
     monkeypatch.setattr("mcp_devops.tools.work_item_tools.devops_api_url", TEST_BASE_URL)
+    monkeypatch.setattr("mcp_devops.tools.wiki_tools.devops_api_url", TEST_BASE_URL)
     return TEST_BASE_URL
-
-
-TEST_SERVER_URL = "https://devops.example.com"
-
-
-@pytest.fixture()
-def wiki_server_url(monkeypatch):
-    """
-    Patch the server-level ``devops_url`` name in ``shared`` so that
-    ``get_base_api_url`` builds correct URLs in wiki tool tests.
-    """
-    monkeypatch.setattr("mcp_devops.shared.devops_url", TEST_SERVER_URL)
-    return TEST_SERVER_URL

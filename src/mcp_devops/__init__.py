@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import os
 
-__version__ = "1.1.1"
+__version__ = "2.0.0"
 
 from mcp_devops.shared import mcp, validate_configuration
 import mcp_devops.tools  # noqa: F401 - registers all tool decorators

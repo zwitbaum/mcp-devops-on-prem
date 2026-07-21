@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] - 2026-07-21
+
+### Added
+- `devops_code_search`: search source code with repository, path, and branch filters
+- `devops_work_item_search`: search work items with area, type, state, and assigned-to filters
+- `devops_wiki_search`: search wiki pages with optional wiki filtering
+
+### Changed
+- wiki tools: derive the project from `DEVOPS_API_URL` and use `wiki_id`/`page_id` parameters
+- `devops_wiki_page_get`: replace the URL-based `devops_wiki_page_get_by_url` interface
+
+### Removed
+- `devops_wiki_page_get_by_url`: replaced by `devops_wiki_page_get`
+
 ## [1.1.1] - 2026-06-18
 
 ### Fixed
@@ -84,7 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NTLM, PAT, and OAuth Bearer token authentication
 - GitHub Actions CI and PyPI publish workflows
 
-[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.1.1...v2.0.0
 [1.1.1]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v0.3.0...v1.0.0

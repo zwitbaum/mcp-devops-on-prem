@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "mcp-devops-onpremise",
   "display_name": "DevOps On-Premises",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "MCP server for on-premises Azure DevOps — browse repositories, pull requests, work items, and wikis.",
   "long_description": "Connect your AI agent to an on-premises Azure DevOps Server (TFS). Supports browsing repositories, diffing pull requests, reading and creating work items, managing wiki pages, and more.\n\nRequires network access to your internal DevOps server.",
   "author": {
@@ -235,15 +235,66 @@
       }
     },
     {
-      "name": "devops_wiki_page_get_by_url",
-      "description": "Get wiki page metadata and content by URL.",
+      "name": "devops_code_search",
+      "description": "Search source code with optional repository, path, and branch filters.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "wiki_url": { "type": "string", "description": "Full URL of the wiki page." },
+          "search_text": { "type": "string", "description": "Keywords or code fragment to search for." },
+          "repository": { "type": "array", "items": { "type": "string" } },
+          "path": { "type": "array", "items": { "type": "string" } },
+          "branch": { "type": "array", "items": { "type": "string" } },
+          "include_facets": { "type": "boolean", "default": false },
+          "skip": { "type": "integer", "default": 0 },
+          "top": { "type": "integer", "default": 25 }
+        },
+        "required": ["search_text"]
+      }
+    },
+    {
+      "name": "devops_work_item_search",
+      "description": "Search work items with optional area, type, state, and assigned-to filters.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "search_text": { "type": "string", "description": "Keywords to search for in work item fields." },
+          "area_path": { "type": "array", "items": { "type": "string" } },
+          "work_item_type": { "type": "array", "items": { "type": "string" } },
+          "state": { "type": "array", "items": { "type": "string" } },
+          "assigned_to": { "type": "array", "items": { "type": "string" } },
+          "include_facets": { "type": "boolean", "default": false },
+          "skip": { "type": "integer", "default": 0 },
+          "top": { "type": "integer", "default": 25 }
+        },
+        "required": ["search_text"]
+      }
+    },
+    {
+      "name": "devops_wiki_search",
+      "description": "Search wiki pages with an optional wiki filter.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "search_text": { "type": "string", "description": "Keywords to search for in wiki page content and titles." },
+          "wiki": { "type": "array", "items": { "type": "string" } },
+          "include_facets": { "type": "boolean", "default": false },
+          "skip": { "type": "integer", "default": 0 },
+          "top": { "type": "integer", "default": 25 }
+        },
+        "required": ["search_text"]
+      }
+    },
+    {
+      "name": "devops_wiki_page_get",
+      "description": "Get wiki page metadata and content by wiki ID and page ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "wiki_id": { "type": "string", "description": "Wiki identifier (name or ID)." },
+          "page_id": { "type": "integer", "description": "Wiki page ID." },
           "include_content": { "type": "boolean", "description": "Whether to include page content. Defaults to false." }
         },
-        "required": ["wiki_url"]
+        "required": ["wiki_id", "page_id"]
       }
     },
     {
@@ -252,14 +303,12 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "organization": { "type": "string", "description": "DevOps organization name." },
-          "project": { "type": "string", "description": "DevOps project name." },
           "wiki_id": { "type": "string", "description": "Wiki identifier (name or ID)." },
           "parent_path": { "type": "string", "description": "Relative path of the parent wiki page, or '/' for root." },
           "title": { "type": "string", "description": "Title of the wiki page." },
           "content": { "type": "string", "description": "Page content in markdown." }
         },
-        "required": ["organization", "project", "wiki_id", "parent_path", "title"]
+        "required": ["wiki_id", "parent_path", "title"]
       }
     },
     {
@@ -268,13 +317,11 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "organization": { "type": "string", "description": "DevOps organization name." },
-          "project": { "type": "string", "description": "DevOps project name." },
           "wiki_id": { "type": "string", "description": "Wiki identifier (name or ID)." },
           "page_id": { "type": "integer", "description": "Wiki page ID." },
           "content": { "type": "string", "description": "New content for the wiki page." }
         },
-        "required": ["organization", "project", "wiki_id", "page_id"]
+        "required": ["wiki_id", "page_id"]
       }
     },
     {
@@ -283,13 +330,11 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "organization": { "type": "string", "description": "DevOps organization name." },
-          "project": { "type": "string", "description": "DevOps project name." },
           "wiki_id": { "type": "string", "description": "Wiki identifier (name or ID)." },
           "page_id": { "type": "integer", "description": "Wiki page ID." },
           "comment": { "type": "string", "description": "Optional deletion comment." }
         },
-        "required": ["organization", "project", "wiki_id", "page_id"]
+        "required": ["wiki_id", "page_id"]
       }
     },
     {

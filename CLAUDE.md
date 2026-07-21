@@ -78,11 +78,15 @@ Project context for recommenders and repository analysis tools.
   - `devops_work_item_comment_update`
   - `devops_work_item_comment_delete`
 
-- **Wiki:** get by URL, create/update, update, delete
-  - `devops_wiki_page_get_by_url`
+- **Wiki:** get by wiki ID/page ID, create/update, update, delete
+  - `devops_wiki_page_get`
   - `devops_wiki_page_create_or_update`
   - `devops_wiki_page_update`
   - `devops_wiki_page_delete`
+- **Search:** code, work item, and wiki full-text search
+  - `devops_code_search`
+  - `devops_work_item_search`
+  - `devops_wiki_search`
 
 ## Local Commands
 
