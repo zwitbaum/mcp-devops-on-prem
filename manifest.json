@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "mcp-devops-onpremise",
   "display_name": "DevOps On-Premises",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "MCP server for on-premises Azure DevOps — browse repositories, pull requests, work items, and wikis.",
   "long_description": "Connect your AI agent to an on-premises Azure DevOps Server (TFS). Supports browsing repositories, diffing pull requests, reading and creating work items, managing wiki pages, and more.\n\nRequires network access to your internal DevOps server.",
   "author": {
@@ -91,6 +91,38 @@
           "thread_id": { "type": "integer", "description": "The ID of the thread to retrieve." }
         },
         "required": ["repository_id", "pull_request_id", "thread_id"]
+      }
+    },
+    {
+      "name": "devops_pull_request_write",
+      "description": "Create or update pull requests, update reviewers, or cast the authenticated user's vote.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string", "enum": ["create", "update", "update_reviewers", "vote"], "description": "Action to perform." },
+          "repository_id": { "type": "string", "description": "Repository name or ID. Required for all actions." },
+          "pull_request_id": { "type": "integer", "description": "Pull request ID. Required for update, update_reviewers, and vote." },
+          "source_ref_name": { "type": "string", "description": "Source branch ref for create, for example refs/heads/feature-branch." },
+          "target_ref_name": { "type": "string", "description": "Target branch ref for create or update, for example refs/heads/main." },
+          "title": { "type": "string", "description": "Pull request title. Required for create; optional for update." },
+          "description": { "type": "string", "description": "Pull request description. Used for create and update." },
+          "is_draft": { "type": "boolean", "description": "Whether the pull request is a draft. Used for create and update." },
+          "work_items": { "type": "string", "description": "Space-separated work item IDs to associate. Used for create." },
+          "fork_source_repository_id": { "type": "string", "description": "Fork source repository ID. Used for create." },
+          "labels": { "type": "array", "items": { "type": "string" }, "description": "Label names. Used for create and update." },
+          "status": { "type": "string", "enum": ["Active", "Abandoned"], "description": "New status for update." },
+          "auto_complete": { "type": "boolean", "description": "Set or clear autocomplete. Used for update." },
+          "merge_strategy": { "type": "string", "description": "Merge strategy for autocomplete. Used for update." },
+          "merge_commit_message": { "type": "string", "description": "Commit message for autocomplete. Used for update." },
+          "delete_source_branch": { "type": "boolean", "description": "Delete source branch on autocomplete. Used for update." },
+          "transition_work_items": { "type": "boolean", "description": "Transition work items on autocomplete. Used for update." },
+          "bypass_policy": { "type": "boolean", "description": "Bypass branch policies on autocomplete. Requires bypass_reason." },
+          "bypass_reason": { "type": "string", "description": "Reason for bypassing branch policies." },
+          "reviewer_ids": { "type": "array", "items": { "type": "string" }, "description": "Reviewer IDs. Required for update_reviewers." },
+          "reviewer_action": { "type": "string", "enum": ["add", "remove"], "description": "Reviewer action. Required for update_reviewers." },
+          "vote": { "type": "string", "enum": ["Approved", "ApprovedWithSuggestions", "NoVote", "WaitingForAuthor", "Rejected"], "description": "Vote to cast." }
+        },
+        "required": ["action"]
       }
     },
     {

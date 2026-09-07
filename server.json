@@ -3,7 +3,7 @@
   "name": "io.github.zwitbaum/mcp-devops-on-prem",
   "title": "Azure DevOps On-Premises",
   "description": "MCP server for on-premises Azure DevOps Server and TFS: repos, pull requests, work items, and wiki.",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "license": "Apache-2.0",
   "websiteUrl": "https://zwitbaum.github.io/mcp-devops-on-prem",
   "repository": {
@@ -15,7 +15,7 @@
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "mcp-devops-onpremise",
-      "version": "2.0.1",
+      "version": "2.1.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"

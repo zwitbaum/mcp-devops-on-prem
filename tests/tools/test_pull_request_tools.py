@@ -4,6 +4,7 @@ Auth path coverage lives in test_shared.py. These tests use the Bearer token
 path only so responses intercepts requests without NTLM negotiation.
 """
 
+import json
 import re
 
 import pytest
@@ -19,6 +20,7 @@ from mcp_devops.tools.pull_request_tools import (
     reply_pull_request_comment,
     update_pull_request_comment,
     update_pull_request_thread,
+    write_pull_request,
 )
 from tests.mocks.pull_requests import (
     CREATE_THREAD_RESPONSE,
@@ -42,6 +44,7 @@ reply_pull_request_comment = reply_pull_request_comment.fn
 update_pull_request_thread = update_pull_request_thread.fn
 update_pull_request_comment = update_pull_request_comment.fn
 delete_pull_request_comment = delete_pull_request_comment.fn
+write_pull_request = write_pull_request.fn
 
 BASE_URL = "https://devops.example.com/org/project"
 REPO = "MyRepo"
@@ -52,6 +55,18 @@ COMMENT_ID = 1
 PR_URL = f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests/{PR_ID}"
 THREADS_URL = f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests/{PR_ID}/threads"
 THREAD_URL = f"{THREADS_URL}/{THREAD_ID}"
+WRITE_PR_URL = f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests?api-version=7.1"
+WRITE_PR_ID_URL = f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests/{PR_ID}?api-version=7.1"
+CONNECTION_DATA_URL = f"{BASE_URL}/_apis/connectionData?api-version=7.1"
+
+WRITE_PR_RESPONSE = {
+    **PULL_REQUEST_RESPONSE,
+    "codeReviewId": 500,
+    "repository": {"name": REPO, "project": {"name": "Project"}},
+    "createdBy": {"displayName": "Alice", "uniqueName": "alice@example.com"},
+}
+
+CONNECTION_DATA_RESPONSE = {"authenticatedUser": {"id": "user-1"}}
 
 
 @pytest.fixture()
@@ -131,6 +146,357 @@ class TestGetPullRequest:
 
         assert result["workItems"] == []
         assert len(rsps_lib.calls) == 1  # No additional fetches
+
+
+# ---------------------------------------------------------------------------
+# write_pull_request
+# ---------------------------------------------------------------------------
+
+
+class TestWritePullRequest:
+    @rsps_lib.activate
+    def test_create_builds_payload_and_returns_trimmed_response(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.POST, WRITE_PR_URL, json=WRITE_PR_RESPONSE, status=200)
+
+        result = write_pull_request(
+            "create",
+            repository_id=REPO,
+            source_ref_name="refs/heads/feature/new-tool",
+            target_ref_name="refs/heads/main",
+            title="Add PR write tool",
+            description="Create a write tool",
+            is_draft=True,
+            work_items="101 102",
+            labels=["ready", "mcp"],
+        )
+
+        body = json.loads(rsps_lib.calls[0].request.body)
+        assert rsps_lib.calls[0].request.url == WRITE_PR_URL
+        assert body["sourceRefName"] == "refs/heads/feature/new-tool"
+        assert body["targetRefName"] == "refs/heads/main"
+        assert body["title"] == "Add PR write tool"
+        assert body["isDraft"] is True
+        assert body["supportsIterations"] is True
+        assert body["workItemRefs"] == [{"id": "101"}, {"id": "102"}]
+        assert body["labels"] == [{"name": "ready"}, {"name": "mcp"}]
+        assert result["prId"] == 42
+        assert result["repository"] == REPO
+        assert result["createdBy"]["displayName"] == "Alice"
+
+    @rsps_lib.activate
+    def test_create_validates_required_fields_before_calling_api(self, devops_url, token_auth):
+        result = write_pull_request("create", repository_id=REPO, source_ref_name="refs/heads/topic")
+
+        assert result == {"error": "target_ref_name is required for create"}
+        assert len(rsps_lib.calls) == 0
+
+    @pytest.mark.parametrize(
+        ("kwargs", "expected_error"),
+        [
+            ({}, "repository_id is required for create"),
+            ({"repository_id": REPO}, "source_ref_name is required for create"),
+            (
+                {"repository_id": REPO, "source_ref_name": "refs/heads/topic", "target_ref_name": "refs/heads/main"},
+                "title is required for create",
+            ),
+        ],
+    )
+    @rsps_lib.activate
+    def test_create_validates_each_required_field_before_calling_api(self, devops_url, token_auth, kwargs, expected_error):
+        result = write_pull_request("create", **kwargs)
+
+        assert result == {"error": expected_error}
+        assert len(rsps_lib.calls) == 0
+
+    @rsps_lib.activate
+    def test_create_without_optional_work_items_sends_empty_work_item_refs(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.POST, WRITE_PR_URL, json=WRITE_PR_RESPONSE, status=200)
+
+        write_pull_request(
+            "create",
+            repository_id=REPO,
+            source_ref_name="refs/heads/feature/no-work-items",
+            target_ref_name="refs/heads/main",
+            title="No work items",
+        )
+
+        body = json.loads(rsps_lib.calls[0].request.body)
+        assert body["workItemRefs"] == []
+
+    @rsps_lib.activate
+    def test_create_includes_fork_source_repository(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.POST, WRITE_PR_URL, json=WRITE_PR_RESPONSE, status=200)
+
+        write_pull_request(
+            "create",
+            repository_id=REPO,
+            source_ref_name="refs/heads/feature/forked",
+            target_ref_name="refs/heads/main",
+            title="From fork",
+            fork_source_repository_id="fork-repo-id",
+        )
+
+        body = json.loads(rsps_lib.calls[0].request.body)
+        assert body["forkSource"] == {"repository": {"id": "fork-repo-id"}}
+
+    @rsps_lib.activate
+    def test_update_sets_auto_complete_options(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, CONNECTION_DATA_URL, json=CONNECTION_DATA_RESPONSE, status=200)
+        rsps_lib.add(rsps_lib.PATCH, WRITE_PR_ID_URL, json=WRITE_PR_RESPONSE, status=200)
+
+        result = write_pull_request(
+            "update",
+            repository_id=REPO,
+            pull_request_id=PR_ID,
+            title="Updated title",
+            auto_complete=True,
+            merge_strategy="Squash",
+            merge_commit_message="Merge by squash",
+            delete_source_branch=True,
+        )
+
+        body = json.loads(rsps_lib.calls[1].request.body)
+        assert rsps_lib.calls[0].request.url == CONNECTION_DATA_URL
+        assert rsps_lib.calls[1].request.url == WRITE_PR_ID_URL
+        assert body["title"] == "Updated title"
+        assert body["autoCompleteSetBy"] == {"id": "user-1"}
+        assert body["completionOptions"] == {
+            "deleteSourceBranch": True,
+            "transitionWorkItems": True,
+            "bypassPolicy": False,
+            "mergeStrategy": 2,
+            "mergeCommitMessage": "Merge by squash",
+        }
+        assert result["title"] == "Add new feature"
+
+    @rsps_lib.activate
+    def test_update_requires_bypass_reason_when_bypassing_policy(self, devops_url, token_auth):
+        result = write_pull_request(
+            "update",
+            repository_id=REPO,
+            pull_request_id=PR_ID,
+            auto_complete=True,
+            bypass_policy=True,
+        )
+
+        assert result == {"error": "bypass_reason is required when bypass_policy is true"}
+        assert len(rsps_lib.calls) == 0
+
+    @pytest.mark.parametrize(
+        ("kwargs", "expected_error"),
+        [
+            ({}, "repository_id is required for update"),
+            ({"repository_id": REPO}, "pull_request_id is required for update"),
+            ({"repository_id": REPO, "pull_request_id": PR_ID, "status": "Completed"}, "status must be Active or Abandoned"),
+            (
+                {"repository_id": REPO, "pull_request_id": PR_ID, "auto_complete": True, "merge_strategy": "Bad"},
+                "merge_strategy must be NoFastForward, Squash, Rebase, or RebaseMerge",
+            ),
+        ],
+    )
+    @rsps_lib.activate
+    def test_update_validates_inputs_before_patch(self, devops_url, token_auth, kwargs, expected_error):
+        if kwargs.get("auto_complete"):
+            rsps_lib.add(rsps_lib.GET, CONNECTION_DATA_URL, json=CONNECTION_DATA_RESPONSE, status=200)
+
+        result = write_pull_request("update", **kwargs)
+
+        assert result == {"error": expected_error}
+        assert not any(call.request.method == "PATCH" for call in rsps_lib.calls)
+
+    @rsps_lib.activate
+    def test_update_returns_error_when_auto_complete_user_is_missing(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, CONNECTION_DATA_URL, json={"authenticatedUser": {}}, status=200)
+
+        result = write_pull_request("update", repository_id=REPO, pull_request_id=PR_ID, auto_complete=True)
+
+        assert result == {"error": "Could not determine authenticated user ID."}
+        assert len(rsps_lib.calls) == 1
+
+    @rsps_lib.activate
+    def test_update_clears_auto_complete(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.PATCH, WRITE_PR_ID_URL, json=WRITE_PR_RESPONSE, status=200)
+
+        write_pull_request("update", repository_id=REPO, pull_request_id=PR_ID, auto_complete=False)
+
+        body = json.loads(rsps_lib.calls[0].request.body)
+        assert body["autoCompleteSetBy"] is None
+        assert body["completionOptions"] is None
+
+    @rsps_lib.activate
+    def test_update_sends_optional_scalar_fields_and_status(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.PATCH, WRITE_PR_ID_URL, json=WRITE_PR_RESPONSE, status=200)
+
+        write_pull_request(
+            "update",
+            repository_id=REPO,
+            pull_request_id=PR_ID,
+            description="Updated description",
+            is_draft=True,
+            target_ref_name="refs/heads/release/v5.16.0",
+            status="Abandoned",
+        )
+
+        body = json.loads(rsps_lib.calls[0].request.body)
+        assert body == {
+            "description": "Updated description",
+            "isDraft": True,
+            "targetRefName": "refs/heads/release/v5.16.0",
+            "status": 2,
+        }
+
+    @rsps_lib.activate
+    def test_update_includes_bypass_reason_when_bypassing_policy(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, CONNECTION_DATA_URL, json=CONNECTION_DATA_RESPONSE, status=200)
+        rsps_lib.add(rsps_lib.PATCH, WRITE_PR_ID_URL, json=WRITE_PR_RESPONSE, status=200)
+
+        write_pull_request(
+            "update",
+            repository_id=REPO,
+            pull_request_id=PR_ID,
+            auto_complete=True,
+            bypass_policy=True,
+            bypass_reason="Emergency hotfix",
+        )
+
+        body = json.loads(rsps_lib.calls[1].request.body)
+        assert body["completionOptions"]["bypassPolicy"] is True
+        assert body["completionOptions"]["bypassReason"] == "Emergency hotfix"
+
+    @rsps_lib.activate
+    def test_update_requires_at_least_one_update_field(self, devops_url, token_auth):
+        result = write_pull_request("update", repository_id=REPO, pull_request_id=PR_ID)
+
+        assert result == {
+            "error": (
+                "At least one field (title, description, is_draft, target_ref_name, status, "
+                "auto_complete options, or labels) must be provided for update."
+            )
+        }
+        assert len(rsps_lib.calls) == 0
+
+    @rsps_lib.activate
+    def test_update_replaces_labels_without_other_patch_fields(self, devops_url, token_auth):
+        labels_url = f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests/{PR_ID}/labels?api-version=7.1"
+        label_url = f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests/{PR_ID}/labels/old-label?api-version=7.1"
+        rsps_lib.add(rsps_lib.GET, labels_url, json={"value": [{"id": "old-label", "name": "old"}]}, status=200)
+        rsps_lib.add(rsps_lib.DELETE, label_url, status=204)
+        rsps_lib.add(rsps_lib.POST, labels_url, json={"id": "new-label", "name": "new"}, status=200)
+        rsps_lib.add(rsps_lib.GET, WRITE_PR_ID_URL, json=WRITE_PR_RESPONSE, status=200)
+
+        result = write_pull_request("update", repository_id=REPO, pull_request_id=PR_ID, labels=["new"])
+
+        assert [call.request.method for call in rsps_lib.calls] == ["GET", "DELETE", "POST", "GET"]
+        assert json.loads(rsps_lib.calls[2].request.body) == {"name": "new"}
+        assert result["prId"] == PR_ID
+
+    @rsps_lib.activate
+    def test_update_reviewers_adds_each_reviewer(self, devops_url, token_auth):
+        reviewer_url = f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests/{PR_ID}/reviewers/user-1?api-version=7.1"
+        rsps_lib.add(
+            rsps_lib.PUT,
+            reviewer_url,
+            json={"displayName": "Bob", "id": "user-1", "uniqueName": "bob@example.com", "vote": 0},
+            status=200,
+        )
+
+        result = write_pull_request(
+            "update_reviewers",
+            repository_id=REPO,
+            pull_request_id=PR_ID,
+            reviewer_ids=["user-1"],
+            reviewer_action="add",
+        )
+
+        assert json.loads(rsps_lib.calls[0].request.body) == {"id": "user-1"}
+        assert result == [
+            {
+                "displayName": "Bob",
+                "id": "user-1",
+                "uniqueName": "bob@example.com",
+                "vote": 0,
+                "hasDeclined": None,
+                "isFlagged": None,
+            }
+        ]
+
+    @rsps_lib.activate
+    def test_update_reviewers_removes_each_reviewer(self, devops_url, token_auth):
+        reviewer_url = f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests/{PR_ID}/reviewers/user-1?api-version=7.1"
+        rsps_lib.add(rsps_lib.DELETE, reviewer_url, status=204)
+
+        result = write_pull_request(
+            "update_reviewers",
+            repository_id=REPO,
+            pull_request_id=PR_ID,
+            reviewer_ids=["user-1"],
+            reviewer_action="remove",
+        )
+
+        assert rsps_lib.calls[0].request.method == "DELETE"
+        assert result == {"message": "Reviewers with IDs user-1 removed from pull request 42."}
+
+    @pytest.mark.parametrize(
+        ("kwargs", "expected_error"),
+        [
+            ({}, "repository_id is required for update_reviewers"),
+            ({"repository_id": REPO}, "pull_request_id is required for update_reviewers"),
+            ({"repository_id": REPO, "pull_request_id": PR_ID}, "reviewer_ids is required for update_reviewers"),
+            (
+                {"repository_id": REPO, "pull_request_id": PR_ID, "reviewer_ids": ["user-1"]},
+                "reviewer_action must be add or remove",
+            ),
+        ],
+    )
+    @rsps_lib.activate
+    def test_update_reviewers_validates_inputs(self, devops_url, token_auth, kwargs, expected_error):
+        result = write_pull_request("update_reviewers", **kwargs)
+
+        assert result == {"error": expected_error}
+        assert len(rsps_lib.calls) == 0
+
+    @rsps_lib.activate
+    def test_vote_casts_authenticated_user_vote(self, devops_url, token_auth):
+        reviewer_url = f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests/{PR_ID}/reviewers/user-1?api-version=7.1"
+        rsps_lib.add(rsps_lib.GET, CONNECTION_DATA_URL, json=CONNECTION_DATA_RESPONSE, status=200)
+        rsps_lib.add(rsps_lib.PUT, reviewer_url, json={"id": "user-1", "vote": -10}, status=200)
+
+        result = write_pull_request("vote", repository_id=REPO, pull_request_id=PR_ID, vote="Rejected")
+
+        body = json.loads(rsps_lib.calls[1].request.body)
+        assert body == {"id": "user-1", "vote": -10}
+        assert result == {"message": "Successfully cast vote 'Rejected' on PR #42."}
+
+    @pytest.mark.parametrize(
+        ("kwargs", "expected_error"),
+        [
+            ({}, "repository_id is required for vote"),
+            ({"repository_id": REPO}, "pull_request_id is required for vote"),
+            ({"repository_id": REPO, "pull_request_id": PR_ID}, "vote must be Approved, ApprovedWithSuggestions, NoVote, WaitingForAuthor, or Rejected"),
+        ],
+    )
+    @rsps_lib.activate
+    def test_vote_validates_inputs(self, devops_url, token_auth, kwargs, expected_error):
+        result = write_pull_request("vote", **kwargs)
+
+        assert result == {"error": expected_error}
+        assert len(rsps_lib.calls) == 0
+
+    @rsps_lib.activate
+    def test_vote_returns_error_when_authenticated_user_is_missing(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, CONNECTION_DATA_URL, json={"authenticatedUser": {}}, status=200)
+
+        result = write_pull_request("vote", repository_id=REPO, pull_request_id=PR_ID, vote="Approved")
+
+        assert result == {"error": "Could not determine authenticated user ID."}
+        assert len(rsps_lib.calls) == 1
+
+    @rsps_lib.activate
+    def test_unknown_write_action_returns_error(self, devops_url, token_auth):
+        result = write_pull_request("unknown")
+
+        assert result == {"error": "Unknown action: unknown"}
+        assert len(rsps_lib.calls) == 0
 
 
 # ---------------------------------------------------------------------------

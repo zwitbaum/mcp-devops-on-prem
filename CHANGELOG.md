@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] - 2026-09-07
+
+### Added
+- `devops_pull_request_write`: create or update pull requests, update reviewers, and cast the authenticated user's PR vote
+
+### Changed
+- tests: expanded focused coverage for `pull_request_tools.py` and `search_tools.py` to cover all project lines in both modules
+
+### Fixed
+- tests: changed the invalid `http\(s\)` regex literal to a raw string to remove the Python deprecation warning
+
+---
+
 ## [2.0.1] - 2026-09-03
 
 ### Changed
@@ -105,7 +118,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NTLM, PAT, and OAuth Bearer token authentication
 - GitHub Actions CI and PyPI publish workflows
 
-[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.1.1...v2.0.0
 [1.1.1]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.1.0...v1.1.1

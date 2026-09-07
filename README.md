@@ -129,6 +129,7 @@ For permanent installs and release notes, see [Updating](docs/getting-started.md
 | Tool | Description | Read-only |
 |---|---|:---:|
 | `devops_pull_request_get` | Retrieve a pull request by ID, including linked work items and commit SHAs for diffing | ✅ |
+| `devops_pull_request_write` | Create or update pull requests, update reviewers, or cast your PR vote | ❌ |
 | `devops_pull_request_list_threads` | Returns a hierarchical list of non-deleted comment threads and their text comments | ✅ |
 | `devops_pull_request_list_thread_comments` | List non-deleted text comments in a specific thread | ✅ |
 | `devops_pull_request_create_comment` | Create a new thread with an initial comment (general or inline on a file/line) | ❌ |

@@ -5,6 +5,7 @@ from mcp_devops.shared import (
     mcp,
     devops_api_get,
     devops_api_post,
+    devops_api_put,
     devops_api_patch,
     devops_api_delete,
     fetch_work_item,
@@ -15,6 +16,303 @@ from mcp_devops.shared import (
 def _ensure_rel_file_path(file_path: str | None) -> str | None:
     """Ensure file path starts with a slash, as required by the Azure DevOps API."""
     return f"/{file_path}" if file_path and not file_path.startswith("/") else file_path
+
+
+_PULL_REQUEST_STATUS_BY_NAME = {
+    "Active": 1,
+    "Abandoned": 2,
+}
+
+_PULL_REQUEST_VOTE_BY_NAME = {
+    "Approved": 10,
+    "ApprovedWithSuggestions": 5,
+    "NoVote": 0,
+    "WaitingForAuthor": -5,
+    "Rejected": -10,
+}
+
+_MERGE_STRATEGY_BY_NAME = {
+    "NoFastForward": 1,
+    "Squash": 2,
+    "Rebase": 3,
+    "RebaseMerge": 4,
+}
+
+
+def _split_work_item_ids(work_items: str | None) -> list[dict[str, str]]:
+    if not work_items:
+        return []
+    return [{"id": item.strip()} for item in work_items.split() if item.strip()]
+
+
+def _trim_pull_request_response(data: dict, include_description: bool = True) -> dict:
+    result = {
+        "prId": data.get("pullRequestId"),
+        "codeReviewId": data.get("codeReviewId"),
+        "repository": (data.get("repository") or {}).get("name"),
+        "status": data.get("status"),
+        "createdBy": {
+            "displayName": ((data.get("createdBy") or {}).get("displayName")),
+            "uniqueName": ((data.get("createdBy") or {}).get("uniqueName")),
+        },
+        "creationDate": data.get("creationDate"),
+        "closedDate": data.get("closedDate"),
+        "title": data.get("title"),
+        "isDraft": data.get("isDraft"),
+        "sourceRefName": data.get("sourceRefName"),
+        "targetRefName": data.get("targetRefName"),
+        "project": ((data.get("repository") or {}).get("project") or {}).get("name"),
+    }
+    if include_description:
+        result["description"] = data.get("description") or ""
+    return result
+
+
+def _get_current_user_id() -> str | None:
+    url = f"{devops_api_url}/_apis/connectionData?api-version={DEVOPS_API_VERSION}"
+    data = devops_api_get(url)
+    return (data.get("authenticatedUser") or {}).get("id")
+
+
+def _labels_url(repository_id: str, pull_request_id: int) -> str:
+    return (
+        f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests"
+        f"/{pull_request_id}/labels?api-version={DEVOPS_API_VERSION}"
+    )
+
+
+def _label_url(repository_id: str, pull_request_id: int, label_id: str) -> str:
+    return (
+        f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests"
+        f"/{pull_request_id}/labels/{label_id}?api-version={DEVOPS_API_VERSION}"
+    )
+
+
+def _reviewer_url(repository_id: str, pull_request_id: int, reviewer_id: str) -> str:
+    return (
+        f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests"
+        f"/{pull_request_id}/reviewers/{reviewer_id}?api-version={DEVOPS_API_VERSION}"
+    )
+
+
+def _pull_request_url(repository_id: str, pull_request_id: int | None = None) -> str:
+    url = f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests"
+    if pull_request_id is not None:
+        url = f"{url}/{pull_request_id}"
+    return f"{url}?api-version={DEVOPS_API_VERSION}"
+
+
+def _replace_pull_request_labels(repository_id: str, pull_request_id: int, labels: list[str]) -> None:
+    current_labels = devops_api_get(_labels_url(repository_id, pull_request_id)).get("value", [])
+    for label in current_labels:
+        label_id = label.get("id") or label.get("name")
+        if label_id:
+            devops_api_delete(_label_url(repository_id, pull_request_id, label_id))
+    for label in labels:
+        devops_api_post(_labels_url(repository_id, pull_request_id), {"name": label})
+
+
+def _require(value, message: str) -> str | None:
+    return None if value else message
+
+
+@mcp.tool(
+    name="devops_pull_request_write",
+    description=(
+        "Write operations for pull requests. Use the action parameter to create or update pull requests, "
+        "add or remove reviewers, or cast the authenticated user's vote."
+    ),
+    annotations={"readOnlyHint": False},
+)
+def write_pull_request(
+    action: Annotated[
+        str,
+        "Action to perform: create, update, update_reviewers, or vote.",
+    ],
+    repository_id: Annotated[str | None, "Repository name or ID. Required for all actions."] = None,
+    pull_request_id: Annotated[
+        int | None,
+        "Pull request ID. Required for update, update_reviewers, and vote.",
+    ] = None,
+    source_ref_name: Annotated[
+        str | None,
+        "Source branch ref for create, for example refs/heads/feature-branch.",
+    ] = None,
+    target_ref_name: Annotated[
+        str | None,
+        "Target branch ref for create or update, for example refs/heads/main.",
+    ] = None,
+    title: Annotated[str | None, "Pull request title. Required for create; optional for update."] = None,
+    description: Annotated[
+        str | None,
+        "Pull request description. Used for create and update.",
+    ] = None,
+    is_draft: Annotated[bool | None, "Whether the pull request is a draft. Used for create and update."] = None,
+    work_items: Annotated[
+        str | None,
+        "Space-separated work item IDs to associate. Used for create.",
+    ] = None,
+    fork_source_repository_id: Annotated[
+        str | None,
+        "Fork source repository ID. Used for create.",
+    ] = None,
+    labels: Annotated[list[str] | None, "Label names. Used for create and update."] = None,
+    status: Annotated[str | None, "New status for update: Active or Abandoned."] = None,
+    auto_complete: Annotated[bool | None, "Set or clear autocomplete. Used for update."] = None,
+    merge_strategy: Annotated[str | None, "Merge strategy for autocomplete. Used for update."] = None,
+    merge_commit_message: Annotated[str | None, "Commit message for autocomplete. Used for update."] = None,
+    delete_source_branch: Annotated[bool, "Delete source branch on autocomplete. Used for update."] = False,
+    transition_work_items: Annotated[bool, "Transition work items on autocomplete. Used for update."] = True,
+    bypass_policy: Annotated[bool, "Bypass branch policies on autocomplete. Requires bypass_reason."] = False,
+    bypass_reason: Annotated[str | None, "Reason for bypassing branch policies."] = None,
+    reviewer_ids: Annotated[list[str] | None, "Reviewer IDs. Required for update_reviewers."] = None,
+    reviewer_action: Annotated[str | None, "Reviewer action: add or remove. Required for update_reviewers."] = None,
+    vote: Annotated[
+        str | None,
+        "Vote to cast: Approved, ApprovedWithSuggestions, NoVote, WaitingForAuthor, or Rejected.",
+    ] = None,
+) -> object:
+    """Create or update pull requests, reviewers, and authenticated-user votes."""
+    if action == "create":
+        if error := _require(repository_id, "repository_id is required for create"):
+            return {"error": error}
+        if error := _require(source_ref_name, "source_ref_name is required for create"):
+            return {"error": error}
+        if error := _require(target_ref_name, "target_ref_name is required for create"):
+            return {"error": error}
+        if error := _require(title, "title is required for create"):
+            return {"error": error}
+
+        payload = {
+            "sourceRefName": source_ref_name,
+            "targetRefName": target_ref_name,
+            "title": title,
+            "description": description,
+            "isDraft": bool(is_draft),
+            "workItemRefs": _split_work_item_ids(work_items),
+            "supportsIterations": True,
+        }
+        if fork_source_repository_id:
+            payload["forkSource"] = {"repository": {"id": fork_source_repository_id}}
+        if labels:
+            payload["labels"] = [{"name": label} for label in labels]
+
+        response = devops_api_post(_pull_request_url(repository_id), payload)
+        return _trim_pull_request_response(response)
+
+    if action == "update":
+        if error := _require(repository_id, "repository_id is required for update"):
+            return {"error": error}
+        if error := _require(pull_request_id, "pull_request_id is required for update"):
+            return {"error": error}
+
+        payload = {}
+        if title is not None:
+            payload["title"] = title
+        if description is not None:
+            payload["description"] = description
+        if is_draft is not None:
+            payload["isDraft"] = is_draft
+        if target_ref_name is not None:
+            payload["targetRefName"] = target_ref_name
+        if status is not None:
+            if status not in _PULL_REQUEST_STATUS_BY_NAME:
+                return {"error": "status must be Active or Abandoned"}
+            payload["status"] = _PULL_REQUEST_STATUS_BY_NAME[status]
+
+        if auto_complete is not None:
+            if auto_complete:
+                if bypass_policy and not bypass_reason:
+                    return {"error": "bypass_reason is required when bypass_policy is true"}
+                user_id = _get_current_user_id()
+                if not user_id:
+                    return {"error": "Could not determine authenticated user ID."}
+                payload["autoCompleteSetBy"] = {"id": user_id}
+                completion_options = {
+                    "deleteSourceBranch": delete_source_branch,
+                    "transitionWorkItems": transition_work_items,
+                    "bypassPolicy": bypass_policy,
+                }
+                if merge_strategy:
+                    if merge_strategy not in _MERGE_STRATEGY_BY_NAME:
+                        return {"error": "merge_strategy must be NoFastForward, Squash, Rebase, or RebaseMerge"}
+                    completion_options["mergeStrategy"] = _MERGE_STRATEGY_BY_NAME[merge_strategy]
+                if merge_commit_message:
+                    completion_options["mergeCommitMessage"] = merge_commit_message
+                if bypass_reason:
+                    completion_options["bypassReason"] = bypass_reason
+                payload["completionOptions"] = completion_options
+            else:
+                payload["autoCompleteSetBy"] = None
+                payload["completionOptions"] = None
+
+        if not payload and labels is None:
+            return {
+                "error": (
+                    "At least one field (title, description, is_draft, target_ref_name, status, "
+                    "auto_complete options, or labels) must be provided for update."
+                )
+            }
+
+        if labels is not None:
+            _replace_pull_request_labels(repository_id, pull_request_id, labels)
+
+        response = (
+            devops_api_patch(_pull_request_url(repository_id, pull_request_id), payload)
+            if payload
+            else devops_api_get(_pull_request_url(repository_id, pull_request_id))
+        )
+        return _trim_pull_request_response(response)
+
+    if action == "update_reviewers":
+        if error := _require(repository_id, "repository_id is required for update_reviewers"):
+            return {"error": error}
+        if error := _require(pull_request_id, "pull_request_id is required for update_reviewers"):
+            return {"error": error}
+        if not reviewer_ids:
+            return {"error": "reviewer_ids is required for update_reviewers"}
+        if reviewer_action not in {"add", "remove"}:
+            return {"error": "reviewer_action must be add or remove"}
+
+        if reviewer_action == "add":
+            reviewers = []
+            for reviewer_id in reviewer_ids:
+                reviewer = devops_api_put(
+                    _reviewer_url(repository_id, pull_request_id, reviewer_id),
+                    {"id": reviewer_id},
+                )
+                reviewers.append(
+                    {
+                        "displayName": reviewer.get("displayName"),
+                        "id": reviewer.get("id"),
+                        "uniqueName": reviewer.get("uniqueName"),
+                        "vote": reviewer.get("vote"),
+                        "hasDeclined": reviewer.get("hasDeclined"),
+                        "isFlagged": reviewer.get("isFlagged"),
+                    }
+                )
+            return reviewers
+
+        for reviewer_id in reviewer_ids:
+            devops_api_delete(_reviewer_url(repository_id, pull_request_id, reviewer_id))
+        return {"message": f"Reviewers with IDs {', '.join(reviewer_ids)} removed from pull request {pull_request_id}."}
+
+    if action == "vote":
+        if error := _require(repository_id, "repository_id is required for vote"):
+            return {"error": error}
+        if error := _require(pull_request_id, "pull_request_id is required for vote"):
+            return {"error": error}
+        if vote not in _PULL_REQUEST_VOTE_BY_NAME:
+            return {"error": "vote must be Approved, ApprovedWithSuggestions, NoVote, WaitingForAuthor, or Rejected"}
+
+        user_id = _get_current_user_id()
+        if not user_id:
+            return {"error": "Could not determine authenticated user ID."}
+        payload = {"id": user_id, "vote": _PULL_REQUEST_VOTE_BY_NAME[vote]}
+        devops_api_put(_reviewer_url(repository_id, pull_request_id, user_id), payload)
+        return {"message": f"Successfully cast vote '{vote}' on PR #{pull_request_id}."}
+
+    return {"error": f"Unknown action: {action}"}
 
 
 @mcp.tool(

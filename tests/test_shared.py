@@ -406,7 +406,7 @@ class TestValidateConfiguration:
         monkeypatch.setenv("DEVOPS_API_URL", "not-a-url")
         monkeypatch.setenv("DEVOPS_PAT", "my-pat")
 
-        with pytest.raises(ValueError, match="valid absolute http\(s\) URL"):
+        with pytest.raises(ValueError, match=r"valid absolute http\(s\) URL"):
             validate_configuration()
 
     def test_rejects_missing_auth_configuration(self, monkeypatch):
