@@ -1,12 +1,14 @@
 <div align="center">
 
-# MCP DevOps On-Premise
+# MCP Server for Azure DevOps Server (formerly TFS)
 
-Model Context Protocol [MCP](https://modelcontextprotocol.io/) server for **on-premises Azure DevOps** that lets AI assistants browse repositories, review pull requests, manage work items, and interact with wikis.
+Model Context Protocol [MCP](https://modelcontextprotocol.io/) server for **Azure DevOps Server, formerly known as Team Foundation Server (TFS)**, the self-hosted, on-premises edition of Azure DevOps. It lets AI assistants browse repositories, review pull requests, manage work items, and interact with wikis.
+
+> **Not for Azure DevOps Services** (cloud, `dev.azure.com`). For the cloud service, use Microsoft's official [Azure DevOps MCP server](https://github.com/microsoft/azure-devops-mcp).
 
 <!-- mcp-name: io.github.zwitbaum/mcp-devops-on-prem -->
 
-[![License: MIT](https://img.shields.io/badge/license-Apache%20License%202.0-blue)](https://opensource.org/licenses/apache-2.0)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache%20License%202.0-blue)](https://opensource.org/licenses/apache-2.0)
 [![PyPI - Version](https://img.shields.io/pypi/v/mcp-devops-onpremise)](https://pypi.org/project/mcp-devops-onpremise)
 
 <div class="toc">
@@ -22,9 +24,9 @@ Model Context Protocol [MCP](https://modelcontextprotocol.io/) server for **on-p
 
 ## Overview
 
-Many organizations use on-premise DevOps solutions such as TFS or Azure DevOps Server in their projects. Integrating these systems with modern agentic AI tools and LLMs can be difficult. The official Microsoft Azure DevOps MCP server does not support these environments and is unlikely to support them in the future.
+Many organizations run **Azure DevOps Server, formerly known as Team Foundation Server (TFS)**, on their own infrastructure. Integrating it with modern agentic AI tools and LLMs can be difficult. The official Microsoft Azure DevOps MCP server supports only the cloud-hosted Azure DevOps Services and is unlikely to support Azure DevOps Server in the future.
 
-This MCP server closes that gap and enables smooth integration with on-premise DevOps systems.
+This MCP server closes that gap and enables smooth integration with Azure DevOps Server.
 
 This project is under active development, with features continuously added to meet current requirements. Community needs are highly valued — if you miss any features, please submit an [Issue](../../issues). User-requested features are fast-tracked and will be prioritized and added as soon as possible.
 
@@ -34,9 +36,9 @@ One of the most important features of this MCP server is **NTLM authentication**
 
 - NTLM authentication (Windows domain credentials) for on-prem and VPN-based setups where no other auth method works.
 - PAT and OAuth bearer token authentication as alternatives when available.
-- Enables secure access to on-prem DevOps systems from MCP-compatible AI tools such as GitHub Copilot, Claude Desktop, Cursor, Windsurf, and others.
+- Enables secure access to Azure DevOps Server from MCP-compatible AI tools such as GitHub Copilot, Claude Desktop, Cursor, Windsurf, and others.
 - Works in restricted or offline environments without exposing sensitive data to external services.
-- Retrieves commit diffs with clear added/removed lines, similar to the DevOps UI.
+- Retrieves commit diffs with clear added/removed lines, similar to the Azure DevOps web UI.
 - Helps keep and track project documentation alongside code changes.
 - Automates common tasks such as work item management and code review processes.
 
@@ -75,7 +77,7 @@ The server supports three authentication methods. If you are unsure which one to
 |---|---|
 | **NTLM** (username + password) | Most common for on-prem/VPN. Usually the simplest first setup and best fallback if other options fail. |
 | **PAT** (Personal Access Token) | Use when PAT is enabled and allowed. Tokens can expire, and token-based auth may be blocked by policy. Advantage: you do not store your account password in config. |
-| **OAuth Bearer Token** | Advanced option for CI/CD pipelines. Requires OAuth 2.0 configured on your DevOps Server and a token source defined by your administrators. |
+| **OAuth Bearer Token** | Advanced option for CI/CD pipelines. Requires OAuth 2.0 configured on your Azure DevOps Server and a token source defined by your administrators. |
 
 For detailed setup instructions for each method, see [Authentication](docs/getting-started.md#authentication) in the Getting Started guide.
 
@@ -115,6 +117,12 @@ For detailed setup instructions for each method, see [Authentication](docs/getti
 ```
 
 > If you used a permanent install, replace `"command": "uvx"` with `"command": "mcp-devops-onpremise"` and remove the `"args"` line.
+
+### Claude plugin
+
+The [`claude-plugin/`](claude-plugin/) folder packages this server as a Claude plugin (Claude Code, Claude Desktop/Cowork). It launches the pinned PyPI release with `uvx` and asks for the project URL and credentials when you enable it; passwords and tokens are stored in the system's secure credential store. See [claude-plugin/README.md](claude-plugin/README.md).
+
+The plugin pins an exact version (`uvx mcp-devops-onpremise==X.Y.Z`) and is updated automatically through the Claude plugin directory with every release. Manual configurations like the examples above use `@latest`, which `uvx` resolves to the newest release on every start.
 
 ## Updating
 
@@ -185,6 +193,10 @@ For permanent installs and release notes, see [Updating](docs/getting-started.md
 | `devops_wiki_page_update` | Update an existing wiki page by ID | ❌ |
 | `devops_wiki_page_delete` | Delete an existing wiki page by ID | ❌ |
 
+## Privacy Policy
+
+The server runs locally and talks only to the Azure DevOps Server URL you configure. It collects no telemetry and stores no data, apart from attachment files you explicitly ask it to save. Full policy: [PRIVACY.md](PRIVACY.md).
+
 ## Development
 
 ```bash
@@ -198,3 +210,9 @@ uv run black --check src/
 # Run tests
 uv run pytest tests/
 ```
+
+To publish a new version, see [Releasing](docs/releasing.md).
+
+---
+
+*Community project, not affiliated with or endorsed by Microsoft. Azure DevOps is a trademark of Microsoft.*

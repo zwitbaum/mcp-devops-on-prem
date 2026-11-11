@@ -16,6 +16,11 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Verify tag matches the version in every file
+        # Fails if the tag (vX.Y.Z) differs from pyproject.toml, or if any version spot
+        # (server.json, manifest.json, uv.lock, Claude plugin pin, CHANGELOG) disagrees.
+        run: python scripts/bump_version.py --check --expect "${GITHUB_REF_NAME#v}"
+
       - name: Install build tools
         run: pip install build twine
 
@@ -46,6 +51,44 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  promote-plugin:
+    # The Claude plugin directory tracks the plugin-release branch. It must only ever see a
+    # pinned version (uvx mcp-devops-onpremise==X.Y.Z) that is already installable from PyPI.
+    name: Promote Claude plugin (plugin-release branch)
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # Required to move the plugin-release branch
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5.4.0
+        with:
+          python-version: "3.11"
+
+      - name: Wait until the version is installable from PyPI
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          deadline=$((SECONDS + 600))
+          delay=10
+          until pip download "mcp-devops-onpremise==${version}" --no-deps --no-cache-dir --dest "${RUNNER_TEMP}/probe" --quiet; do
+            if (( SECONDS + delay > deadline )); then
+              echo "::error::mcp-devops-onpremise==${version} is still not installable from PyPI after 10 minutes; plugin-release was not moved."
+              exit 1
+            fi
+            echo "mcp-devops-onpremise==${version} not available yet, retrying in ${delay}s"
+            sleep "${delay}"
+            delay=$(( delay * 2 > 120 ? 120 : delay * 2 ))
+          done
+          echo "mcp-devops-onpremise==${version} is available on PyPI."
+
+      - name: Move plugin-release branch to the tagged commit
+        # Creates the branch if it does not exist yet.
+        run: git push origin "${GITHUB_SHA}:refs/heads/plugin-release" --force
 
   publish-mcp-registry:
     name: Publish to MCP Registry

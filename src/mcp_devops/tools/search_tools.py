@@ -94,6 +94,7 @@ def _raise_for_error(response) -> None:
         "Returns matching file locations with snippet context. "
         "Optionally filter by repository, path, and branch."
     ),
+    annotations={"title": "Search code", "readOnlyHint": True, "openWorldHint": False},
 )
 def code_search(
     search_text: Annotated[str, "Keywords or code fragment to search for."],
@@ -146,6 +147,7 @@ def code_search(
         "Search work items (PBIs, bugs, tasks, etc.) in the configured Azure DevOps project using full-text search. "
         "Optionally filter by area path, work item type, state, or assigned-to user."
     ),
+    annotations={"title": "Search work items", "readOnlyHint": True, "openWorldHint": False},
 )
 def work_item_search(
     search_text: Annotated[str, "Keywords to search for in work item fields."],
@@ -205,6 +207,7 @@ def work_item_search(
         "Returns matching pages with snippet context. "
         "Optionally filter by wiki name."
     ),
+    annotations={"title": "Search wiki", "readOnlyHint": True, "openWorldHint": False},
 )
 def wiki_search(
     search_text: Annotated[str, "Keywords to search for in wiki page content and titles."],

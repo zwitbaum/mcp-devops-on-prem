@@ -54,6 +54,7 @@ def _get_wiki_info(wiki_id: str) -> dict:
         "The wiki_id and page_id are found in the browser URL: "
         "https://.../_wiki/wikis/{wiki_id}/{page_id}/..."
     ),
+    annotations={"title": "Get wiki page", "readOnlyHint": True, "openWorldHint": False},
 )
 def get_wiki_page(
     wiki_id: Annotated[str, "Wiki identifier (name or ID). Found in the page URL: .../_wiki/wikis/{wiki_id}/..."],
@@ -74,6 +75,12 @@ def get_wiki_page(
 @mcp.tool(
     name="devops_wiki_page_create_or_update",
     description="Create or update a wiki page under the specified parent page.",
+    annotations={
+        "title": "Create or update wiki page",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+    },
 )
 def create_wiki_page(
     wiki_id: Annotated[str, "Wiki identifier (name or ID)."],
@@ -125,6 +132,7 @@ def create_wiki_page(
 @mcp.tool(
     name="devops_wiki_page_update",
     description="Update an existing wiki page.",
+    annotations={"title": "Update wiki page", "readOnlyHint": False, "destructiveHint": True, "openWorldHint": False},
 )
 def update_wiki_page(
     wiki_id: Annotated[str, "Wiki identifier (name or ID)."],
@@ -161,7 +169,13 @@ def update_wiki_page(
 @mcp.tool(
     name="devops_wiki_page_delete",
     description="Delete an existing wiki page.",
-    annotations={"readOnlyHint": False, "returnType": "void"},
+    annotations={
+        "title": "Delete wiki page",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+        "returnType": "void",
+    },
 )
 def delete_wiki_page(
     wiki_id: Annotated[str, "Wiki identifier (name or ID)."],

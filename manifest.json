@@ -1,10 +1,10 @@
 {
   "manifest_version": "0.3",
   "name": "mcp-devops-onpremise",
-  "display_name": "DevOps On-Premises",
-  "version": "2.1.0",
-  "description": "MCP server for on-premises Azure DevOps — browse repositories, pull requests, work items, and wikis.",
-  "long_description": "Connect your AI agent to an on-premises Azure DevOps Server (TFS). Supports browsing repositories, diffing pull requests, reading and creating work items, managing wiki pages, and more.\n\nRequires network access to your internal DevOps server.",
+  "display_name": "Azure DevOps Server (formerly TFS)",
+  "version": "2.2.0",
+  "description": "MCP server for Azure DevOps Server (formerly Team Foundation Server, TFS): repositories, pull requests, work items, and wikis. Not for Azure DevOps Services.",
+  "long_description": "Connect your AI agent to Azure DevOps Server, formerly known as Team Foundation Server (TFS) — the self-hosted, on-premises edition. Supports browsing repositories, diffing pull requests, reading and creating work items, managing wiki pages, and more.\n\nNot for Azure DevOps Services (dev.azure.com). Requires network access to your internal Azure DevOps Server.",
   "author": {
     "name": "zwitbaum",
     "url": "https://github.com/zwitbaum"
@@ -17,7 +17,7 @@
   "documentation": "https://zwitbaum.github.io/mcp-devops-on-prem",
   "support": "https://github.com/zwitbaum/mcp-devops-on-prem/issues",
   "license": "Apache-2.0",
-  "keywords": ["azure-devops", "on-premise", "tfs", "devops", "pull-request", "work-item", "wiki"],
+  "keywords": ["azure-devops-server", "team-foundation-server", "tfs", "azure-devops", "on-premises", "on-premise", "self-hosted", "devops", "pull-request", "work-item", "wiki"],
   "compatibility": {
     "platforms": ["darwin", "win32", "linux"]
   },

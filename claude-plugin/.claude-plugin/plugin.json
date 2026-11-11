@@ -1,0 +1,44 @@
+{
+  "name": "devops-on-premise",
+  "displayName": "Azure DevOps Server (formerly TFS)",
+  "version": "2.2.0",
+  "description": "Work with Azure DevOps Server, formerly known as Team Foundation Server (TFS): browse repositories, review pull requests, manage work items, and read or edit wiki pages. Not for Azure DevOps Services.",
+  "author": {
+    "name": "zwitbaum",
+    "url": "https://github.com/zwitbaum"
+  },
+  "homepage": "https://zwitbaum.github.io/mcp-devops-on-prem",
+  "repository": "https://github.com/zwitbaum/mcp-devops-on-prem",
+  "license": "Apache-2.0",
+  "keywords": ["azure-devops-server", "team-foundation-server", "tfs", "azure-devops", "on-premises", "on-premise", "self-hosted", "pull-request", "work-item", "wiki"],
+  "privacyPolicyUrl": "https://github.com/zwitbaum/mcp-devops-on-prem/blob/main/PRIVACY.md",
+  "icon": "./.claude-plugin/icon.png",
+  "userConfig": {
+    "api_url": {
+      "type": "string",
+      "title": "Azure DevOps Server project URL",
+      "description": "Full project URL of your Azure DevOps Server: https://<server>/<collection>/<project>",
+      "required": true
+    },
+    "username": {
+      "type": "string",
+      "title": "Username (NTLM)",
+      "description": "Windows domain user as DOMAIN\\username. Leave empty when you use a Personal Access Token.",
+      "default": ""
+    },
+    "password": {
+      "type": "string",
+      "title": "Password (NTLM)",
+      "description": "Windows domain password. Leave empty when you use a Personal Access Token.",
+      "sensitive": true,
+      "default": ""
+    },
+    "pat": {
+      "type": "string",
+      "title": "Personal Access Token",
+      "description": "PAT for your Azure DevOps Server. Leave empty when you use username and password.",
+      "sensitive": true,
+      "default": ""
+    }
+  }
+}

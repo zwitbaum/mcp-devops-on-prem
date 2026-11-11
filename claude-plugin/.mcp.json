@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "devops-on-premise": {
+      "command": "uvx",
+      "args": ["mcp-devops-onpremise==2.2.0"],
+      "env": {
+        "DEVOPS_API_URL": "${user_config.api_url}",
+        "DEVOPS_USERNAME": "${user_config.username}",
+        "DEVOPS_PASSWORD": "${user_config.password}",
+        "DEVOPS_PAT": "${user_config.pat}"
+      }
+    }
+  }
+}

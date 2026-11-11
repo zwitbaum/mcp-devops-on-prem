@@ -122,7 +122,12 @@ def _require(value, message: str) -> str | None:
         "Write operations for pull requests. Use the action parameter to create or update pull requests, "
         "add or remove reviewers, or cast the authenticated user's vote."
     ),
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Create or update pull request",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+    },
 )
 def write_pull_request(
     action: Annotated[
@@ -322,7 +327,7 @@ def write_pull_request(
         "'lastMergeSourceCommit' from the result to obtain changes with "
         "'devops_repository_diffs_commits' tool."
     ),
-    annotations={"readOnlyHint": True},
+    annotations={"title": "Get pull request", "readOnlyHint": True, "openWorldHint": False},
 )
 def get_pull_request(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -362,7 +367,7 @@ def get_pull_request(
     description=(
         "Retrieve a hierarchical list of non-deleted comment threads and their text comments for a pull request."
     ),
-    annotations={"readOnlyHint": True},
+    annotations={"title": "List pull request threads", "readOnlyHint": True, "openWorldHint": False},
 )
 def list_pull_request_threads(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -422,7 +427,7 @@ def list_pull_request_threads(
 @mcp.tool(
     name="devops_pull_request_list_thread_comments",
     description=("Retrieves a list of non-deleted text comments in a specific thread."),
-    annotations={"readOnlyHint": True},
+    annotations={"title": "List pull request thread comments", "readOnlyHint": True, "openWorldHint": False},
 )
 def list_pull_request_thread_comments(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -463,7 +468,12 @@ def list_pull_request_thread_comments(
 @mcp.tool(
     name="devops_pull_request_create_comment",
     description=("Create a new thread with initial comment in the specified pull request."),
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Create pull request comment",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "openWorldHint": False,
+    },
 )
 def create_pull_request_comment(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -518,7 +528,12 @@ def create_pull_request_comment(
 @mcp.tool(
     name="devops_pull_request_reply_comment",
     description=("Replies to a specific comment on a pull request."),
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Reply to pull request comment",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "openWorldHint": False,
+    },
 )
 def reply_pull_request_comment(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -553,7 +568,12 @@ def reply_pull_request_comment(
 @mcp.tool(
     name="devops_pull_request_update_thread",
     description=("Update the status of a comment thread."),
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Update pull request thread status",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+    },
 )
 def update_pull_request_thread(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -580,7 +600,12 @@ def update_pull_request_thread(
 @mcp.tool(
     name="devops_pull_request_update_comment",
     description=("Update an existing comment in the specified pull request."),
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Update pull request comment",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+    },
 )
 def update_pull_request_comment(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -616,7 +641,13 @@ def update_pull_request_comment(
 @mcp.tool(
     name="devops_pull_request_delete_comment",
     description=("Delete a comment from the specified pull request."),
-    annotations={"readOnlyHint": False, "returnType": "void"},
+    annotations={
+        "title": "Delete pull request comment",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+        "returnType": "void",
+    },
 )
 def delete_pull_request_comment(
     repository_id: Annotated[str, "Repository name or ID."],

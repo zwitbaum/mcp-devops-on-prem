@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.zwitbaum/mcp-devops-on-prem",
-  "title": "Azure DevOps On-Premises",
-  "description": "MCP server for on-premises Azure DevOps Server and TFS: repos, pull requests, work items, and wiki.",
-  "version": "2.1.0",
+  "title": "Azure DevOps Server (formerly TFS)",
+  "description": "MCP for Azure DevOps Server (formerly TFS), on-premises. Not for Azure DevOps Services.",
+  "version": "2.2.0",
   "license": "Apache-2.0",
   "websiteUrl": "https://zwitbaum.github.io/mcp-devops-on-prem",
   "repository": {
@@ -15,7 +15,7 @@
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "mcp-devops-onpremise",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"

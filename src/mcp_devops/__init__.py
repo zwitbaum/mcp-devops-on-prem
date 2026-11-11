@@ -1,18 +1,18 @@
-"""MCP DevOps On-Premise server package."""
+"""MCP server for Azure DevOps Server (formerly TFS)."""
 
 from __future__ import annotations
 
 import argparse
 import os
 
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 
 from mcp_devops.shared import mcp, validate_configuration
 import mcp_devops.tools  # noqa: F401 - registers all tool decorators
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run the MCP DevOps On-Premise server.")
+    parser = argparse.ArgumentParser(description="Run the MCP server for Azure DevOps Server (formerly TFS).")
     parser.add_argument("--version", "-V", action="store_true", help="Show package version and exit.")
     parser.add_argument(
         "--transport",

@@ -199,13 +199,15 @@ devenv.local.nix
 .github/*
 !.github/workflows/
 
-# Local test scripts and artifacts
-scripts/
+# Local test scripts and artifacts (except the release script used by CI)
+scripts/*
+!scripts/bump_version.py
 
 # cursor
 .cursor*
 
-# Claude
-.claude/worktrees/
-.claude/settings.local.json
+# AI agent tooling (local only): Claude, Codex / agent skills, codebase memory
+.claude/
+CLAUDE.local.md
+.agents/
 .codebase-memory/

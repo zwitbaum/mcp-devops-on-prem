@@ -1,11 +1,11 @@
 [project]
 name = "mcp-devops-onpremise"
-version = "2.1.0"
-description = "MCP server for on-premises Azure DevOps — browse repositories, pull requests, work items, and wikis."
+version = "2.2.0"
+description = "MCP server for Azure DevOps Server (formerly Team Foundation Server, TFS): repositories, pull requests, work items, and wikis. Not for Azure DevOps Services."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
-keywords = ["mcp", "azure-devops", "on-premise", "tfs", "devops", "ai", "llm"]
+keywords = ["mcp", "azure-devops-server", "team-foundation-server", "tfs", "azure-devops", "on-premises", "on-premise", "self-hosted", "devops", "ai", "llm"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",

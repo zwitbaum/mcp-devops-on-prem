@@ -7,7 +7,7 @@ configSchema:
   properties:
     DEVOPS_API_URL:
       type: string
-      description: The base URL of your on-premise Azure DevOps Server (e.g., https://your-devops-server/your-organization/your-project)
+      description: The base URL of your Azure DevOps Server (formerly TFS) (e.g., https://your-devops-server/your-organization/your-project)
     DEVOPS_USERNAME:
       type: string
       description: Your Windows domain username (e.g., DOMAIN\\username)

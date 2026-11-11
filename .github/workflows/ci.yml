@@ -26,6 +26,9 @@ jobs:
       - name: ruff format check
         run: uv run ruff format --check src/
 
+      - name: Version consistency (package, registry, Claude plugin pin)
+        run: uv run python scripts/bump_version.py --check
+
   test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest

@@ -209,7 +209,7 @@ def _patch_work_item(work_item_id: int, document: list, validate_only: Optional[
         "description, acceptance criteria, tags, parent), plus attachments (files "
         "and inline images) and linked items (work items, pull requests, commits)."
     ),
-    annotations={"readOnlyHint": True},
+    annotations={"title": "Get work item", "readOnlyHint": True, "openWorldHint": False},
 )
 def get_work_item(
     work_item_id: Annotated[int, "The numeric work item ID to fetch."],
@@ -262,7 +262,12 @@ def get_work_item(
         "Download a work item attachment by specified ID. "
         "Returns base64-encoded content, or saves to a local directory if savePath is provided."
     ),
-    annotations={"readOnlyHint": True},
+    annotations={
+        "title": "Get work item attachment",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+    },
 )
 def get_work_item_attachment(
     attachment_id: Annotated[str, "The GUID of the attachment."],
@@ -319,7 +324,7 @@ def get_work_item_attachment(
 @mcp.tool(
     name="devops_work_item_type_get",
     description="Get definition for the specified work item type.",
-    annotations={"readOnlyHint": True},
+    annotations={"title": "Get work item type", "readOnlyHint": True, "openWorldHint": False},
 )
 def get_work_item_type(
     type: Annotated[str, "Work item type name (e.g. 'Bug', 'User Story')."],
@@ -332,7 +337,7 @@ def get_work_item_type(
 @mcp.tool(
     name="devops_work_item_query_by_wiql",
     description=("Execute a WIQL (Work Item Query Language) query and return the matching work items."),
-    annotations={"readOnlyHint": True},
+    annotations={"title": "Query work items (WIQL)", "readOnlyHint": True, "openWorldHint": False},
 )
 def query_work_items_by_wiql(
     query: Annotated[
@@ -394,7 +399,7 @@ def query_work_items_by_wiql(
 @mcp.tool(
     name="devops_work_item_create",
     description="Create a new work item of the specified work item type.",
-    annotations={"readOnlyHint": False},
+    annotations={"title": "Create work item", "readOnlyHint": False, "destructiveHint": False, "openWorldHint": False},
 )
 def create_work_item(
     type: Annotated[str, "The work item type to create, e.g. 'Task', 'Bug', 'User Story'."],
@@ -440,7 +445,7 @@ def create_work_item(
 @mcp.tool(
     name="devops_work_item_update",
     description="Update fields on a work item by ID.",
-    annotations={"readOnlyHint": False},
+    annotations={"title": "Update work item", "readOnlyHint": False, "destructiveHint": True, "openWorldHint": False},
 )
 def update_work_item(
     work_item_id: Annotated[int, "The numeric work item ID to update."],
@@ -479,7 +484,7 @@ def update_work_item(
         "Delete a work item by ID. By default the item is sent to the Recycle Bin and can be restored. "
         "Set destroy=True to permanently destroy the item — WARNING: this is irreversible."
     ),
-    annotations={"readOnlyHint": False},
+    annotations={"title": "Delete work item", "readOnlyHint": False, "destructiveHint": True, "openWorldHint": False},
 )
 def delete_work_item(
     work_item_id: Annotated[int, "The numeric ID of the work item to delete."],
@@ -509,7 +514,12 @@ def delete_work_item(
     description=(
         "Restore a work item from the Recycle Bin by ID. Only works for items deleted without the destroy flag."
     ),
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Restore deleted work item",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "openWorldHint": False,
+    },
 )
 def undelete_work_item(
     work_item_id: Annotated[int, "The numeric ID of the deleted work item to restore."],
@@ -526,7 +536,12 @@ def undelete_work_item(
         "Use op='add' (default) to create a new link, op='remove' to delete an existing one. "
         "To change a link type, call remove then add."
     ),
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Add or remove work item link",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+    },
 )
 def update_work_item_link(
     work_item_id: Annotated[int, "The numeric ID of the work item to modify."],
@@ -600,7 +615,12 @@ def update_work_item_link(
         "on a work item. Use op='add' (default) to attach, op='remove' to detach. "
         "The artifact_id format depends on link_type (see parameter doc)."
     ),
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Add or remove work item artifact link",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+    },
 )
 def update_work_item_artifact_link(
     work_item_id: Annotated[int, "The numeric ID of the work item to modify."],
@@ -677,7 +697,7 @@ def update_work_item_artifact_link(
 @mcp.tool(
     name="devops_work_item_comment_list",
     description="List comments on a work item. Returns up to `top` comments (default 50).",
-    annotations={"readOnlyHint": True},
+    annotations={"title": "List work item comments", "readOnlyHint": True, "openWorldHint": False},
 )
 def list_work_item_comments(
     work_item_id: Annotated[int, "The numeric work item ID."],
@@ -699,7 +719,12 @@ def list_work_item_comments(
 @mcp.tool(
     name="devops_work_item_comment_add",
     description="Add a comment to a work item.",
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Add work item comment",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "openWorldHint": False,
+    },
 )
 def add_work_item_comment(
     work_item_id: Annotated[int, "The numeric work item ID."],
@@ -720,7 +745,12 @@ def add_work_item_comment(
 @mcp.tool(
     name="devops_work_item_comment_update",
     description="Update an existing comment on a work item.",
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Update work item comment",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+    },
 )
 def update_work_item_comment(
     work_item_id: Annotated[int, "The numeric work item ID."],
@@ -743,7 +773,12 @@ def update_work_item_comment(
 @mcp.tool(
     name="devops_work_item_comment_delete",
     description="Delete a comment from a work item.",
-    annotations={"readOnlyHint": False},
+    annotations={
+        "title": "Delete work item comment",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "openWorldHint": False,
+    },
 )
 def delete_work_item_comment(
     work_item_id: Annotated[int, "The numeric work item ID."],

@@ -1,6 +1,6 @@
-# Getting Started with MCP DevOps On-Premise
+# Getting Started with the MCP Server for Azure DevOps Server (formerly TFS)
 
-This guide provides everything you need to install and start using MCP DevOps On-Premise with your AI assistant.
+This guide provides everything you need to install and start using the MCP server for Azure DevOps Server, formerly known as Team Foundation Server (TFS), with your AI assistant.
 
 ## Prerequisites
 
@@ -8,7 +8,7 @@ Before you begin, make sure the following are ready:
 
 - [ ] Python 3.10 or later installed
 - [ ] uv installed
-- [ ] Your on-prem Azure DevOps Server project URL (format: `https://<server>/<organization>/<project>`)
+- [ ] Your Azure DevOps Server project URL (format: `https://<server>/<organization>/<project>`)
 - [ ] Credentials for one of the supported [authentication methods](#authentication)
 
 ### Python 3.10 or later
@@ -60,7 +60,7 @@ The server supports three authentication methods. If you are unsure which one wo
 |---|---|
 | NTLM (username + password) | Corporate network, VPN, Windows / Active Directory auth. Recommended for first setup and fallback. |
 | PAT (Personal Access Token) | Use when PATs are enabled and allowed. Good when you do not want to store your account password in config. |
-| OAuth Bearer Token | Advanced / CI/CD only; requires OAuth 2.0 configured on your DevOps Server |
+| OAuth Bearer Token | Advanced / CI/CD only; requires OAuth 2.0 configured on your Azure DevOps Server |
 
 ### Option 1: NTLM (Username + Password, recommended for on-prem/VPN)
 
@@ -91,7 +91,7 @@ Important PAT notes:
 
 ### Option 3: OAuth Bearer Token (advanced / CI/CD only)
 
-OAuth Bearer tokens work only if your on-prem Azure DevOps Server has OAuth 2.0 configured, which is uncommon in standard on-prem setups. This method is mainly useful for automated pipelines that receive short-lived tokens from an identity provider.
+OAuth Bearer tokens work only if your Azure DevOps Server has OAuth 2.0 configured, which is uncommon in standard on-prem setups. This method is mainly useful for automated pipelines that receive short-lived tokens from an identity provider.
 
 Where to get an OAuth bearer token:
 
@@ -421,7 +421,7 @@ Then configure the MCP client to connect to that URL:
   "servers": {
     "DevOpsOnPremise": {
       "type": "http",
-      "url": "http://127.0.0.1:8000"
+      "url": "http://127.0.0.1:8000/mcp"
     }
   }
 }
@@ -444,7 +444,7 @@ Client configuration:
   "servers": {
     "DevOpsOnPremise": {
       "type": "http",
-      "url": "http://127.0.0.1:8000"
+      "url": "http://127.0.0.1:8000/mcp"
     }
   }
 }
@@ -467,7 +467,7 @@ Client configuration:
   "servers": {
     "DevOpsOnPremise": {
       "type": "http",
-      "url": "http://127.0.0.1:8000"
+      "url": "http://127.0.0.1:8000/mcp"
     }
   }
 }

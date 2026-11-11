@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] - 2026-11-11
+
+### Added
+- Claude plugin in `claude-plugin/` (pinned `uvx mcp-devops-onpremise==2.2.0`, credentials via `userConfig`, secrets marked sensitive)
+- `PRIVACY.md` privacy policy and a Privacy Policy section in the README
+- Claude plugin icon and a note that the plugin runs in Claude Code (terminal, IDE, desktop Code tab), not in claude.ai chat or Cowork
+- Release automation: `scripts/bump_version.py` updates every version spot (package, MCP Registry, MCPB manifest, Claude plugin pin) in one run, and CI checks that they agree. After the PyPI upload, the publish workflow moves the `plugin-release` branch that the Claude plugin directory follows. See `docs/releasing.md`
+
+### Changed
+- All 36 tools now declare MCP annotations: `title`, `readOnlyHint`, `destructiveHint` (for modifying tools) and `openWorldHint: false`
+- Search and wiki tools, which had no annotations, are now annotated
+- `devops_work_item_attachment_get` is marked as modifying (it can write the attachment to disk when `save_path` is set)
+- Server instructions now list all 36 tools; 18 were missing, including the work item create/update/delete, link, comment and WIQL tools and the PR thread tools
+- Display names, titles and descriptions now read "Azure DevOps Server (formerly TFS)" to make clear this server targets Azure DevOps Server, formerly known as Team Foundation Server (TFS), not Azure DevOps Services. Package name `mcp-devops-onpremise` and CLI are unchanged
+- Documentation: HTTP client examples now use the `/mcp` endpoint
+
+### Fixed
+- README license badge label (MIT → Apache-2.0)
+
+---
+
 ## [2.1.0] - 2026-09-07
 
 ### Added
@@ -118,7 +139,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NTLM, PAT, and OAuth Bearer token authentication
 - GitHub Actions CI and PyPI publish workflows
 
-[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v1.1.1...v2.0.0

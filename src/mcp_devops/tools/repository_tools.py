@@ -45,7 +45,7 @@ def _extract_item_text(repository_id: str, path: str, version: str) -> str:
 @mcp.tool(
     name="devops_repository_list",
     description="Get the list of repositories.",
-    annotations={"readOnlyHint": True},
+    annotations={"title": "List repositories", "readOnlyHint": True, "openWorldHint": False},
 )
 def get_repositories() -> object:
     """Retrieve DevOps repositories for the configured organization/project."""
@@ -56,7 +56,7 @@ def get_repositories() -> object:
 @mcp.tool(
     name="devops_repository_get",
     description="Retrieve repository details by repository name or ID.",
-    annotations={"readOnlyHint": True},
+    annotations={"title": "Get repository", "readOnlyHint": True, "openWorldHint": False},
 )
 def get_repository(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -70,7 +70,7 @@ def get_repository(
     name="devops_repository_commit_changes",
     description="Retrieve a list of files changed in the specified commit, including "
     "the type of change for each file (e.g., add, edit, remove).",
-    annotations={"readOnlyHint": True},
+    annotations={"title": "Get commit changes", "readOnlyHint": True, "openWorldHint": False},
 )
 def get_commit_changes(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -85,7 +85,7 @@ def get_commit_changes(
 @mcp.tool(
     name="devops_repository_diffs_commits",
     description="Get the difference between the base and target commits.",
-    annotations={"readOnlyHint": True},
+    annotations={"title": "Diff two commits", "readOnlyHint": True, "openWorldHint": False},
 )
 def compare_commits(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -117,7 +117,7 @@ def compare_commits(
 @mcp.tool(
     name="devops_repository_item_content",
     description=("Get raw file content for a repository path at a specific version."),
-    annotations={"readOnlyHint": True},
+    annotations={"title": "Get file content", "readOnlyHint": True, "openWorldHint": False},
 )
 def get_item_content(
     repository_id: Annotated[str, "Repository name or ID."],
@@ -140,7 +140,7 @@ def get_item_content(
         "Lines are numbered; added lines are prefixed with '+', and removed with '-'. "
         "For full content of specific file, use item content tool with target version ."
     ),
-    annotations={"readOnlyHint": True},
+    annotations={"title": "Get file diff", "readOnlyHint": True, "openWorldHint": False},
 )
 def get_item_content_diff(  # noqa: C901 - readability prioritized for difflib logic
     repository_id: Annotated[str, "Repository name or ID."],

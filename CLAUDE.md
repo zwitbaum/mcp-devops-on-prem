@@ -1,11 +1,11 @@
-# MCP DevOps On-Premise
+# MCP Server for Azure DevOps Server (formerly TFS)
 
 Project context for recommenders and repository analysis tools.
 
 ## Component Metadata
 
 - **Name:** `mcp-devops-onpremise`
-- **Display name:** `DevOps On-Premises`
+- **Display name:** `Azure DevOps Server (formerly TFS)`
 - **Type:** `mcp-server`
 - **Primary language:** `Python`
 - **Runtime:** `uv`
@@ -15,7 +15,7 @@ Project context for recommenders and repository analysis tools.
 - **Docs:** `https://zwitbaum.github.io/mcp-devops-on-prem`
 - **Entrypoint:** `mcp_devops:main`
 - **CLI:** `mcp-devops-onpremise`
-- **Target system:** `Azure DevOps Server / TFS (on-prem)`
+- **Target system:** `Azure DevOps Server, formerly known as Team Foundation Server (TFS) (on-prem)`; not Azure DevOps Services
 - **Plugin status:** not a native Claude plugin package; connect as an MCP server
 
 ## Connection and Auth
@@ -94,12 +94,10 @@ Project context for recommenders and repository analysis tools.
 - **Install deps:** `uv sync --group dev`
 - **Run stdio server:** `uv run mcp-devops-onpremise`
 - **Run HTTP server:** `uv run mcp-devops-onpremise --transport http --host 127.0.0.1 --port 8000`
-- **HTTP helper:** `scripts/start_http_server.ps1`
-- **HTTP helper (cmd):** `scripts/start_http_server.cmd`
-- **HTTP smoke client:** `scripts/test_http.py`
 - **Tests:** `uv run pytest tests/`
 - **Lint:** `uv run ruff check src/`
 - **Format:** `uv run ruff format src/`
+- **Bump release version:** `python scripts/bump_version.py X.Y.Z` (`--check` to verify; see `docs/releasing.md`)
 
 ## Dependency Anchors
 
@@ -108,4 +106,4 @@ Project context for recommenders and repository analysis tools.
 
 ## Matching Tags
 
-- **Tags:** `mcp-server`, `python`, `fastmcp`, `azure-devops`, `azure-devops-server`, `tfs`, `on-prem`, `ntlm`, `pull-requests`, `work-items`, `wiki`, `enterprise-devtools`
+- **Tags:** `mcp-server`, `python`, `fastmcp`, `azure-devops`, `azure-devops-server`, `team-foundation-server`, `tfs`, `on-prem`, `self-hosted`, `ntlm`, `pull-requests`, `work-items`, `wiki`, `enterprise-devtools`
