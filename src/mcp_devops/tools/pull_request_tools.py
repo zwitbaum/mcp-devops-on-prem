@@ -1,4 +1,5 @@
 from typing import Annotated
+from urllib.parse import urlencode
 
 from mcp_devops.shared import (
     devops_api_url,
@@ -23,6 +24,12 @@ _PULL_REQUEST_STATUS_BY_NAME = {
     "Abandoned": 2,
 }
 
+_PULL_REQUEST_LIST_STATUSES = ("active", "abandoned", "completed", "all", "notSet")
+
+# What min_time/max_time refer to in devops_pull_request_list (queryTimeRangeType of the API):
+# created is the server default; closed only works together with status completed.
+_PULL_REQUEST_LIST_TIME_RANGES = ("created", "closed")
+
 _PULL_REQUEST_VOTE_BY_NAME = {
     "Approved": 10,
     "ApprovedWithSuggestions": 5,
@@ -45,26 +52,67 @@ def _split_work_item_ids(work_items: str | None) -> list[dict[str, str]]:
     return [{"id": item.strip()} for item in work_items.split() if item.strip()]
 
 
-def _trim_pull_request_response(data: dict, include_description: bool = True) -> dict:
-    result = {
+def _commit_id(commit: dict | None) -> str | None:
+    return (commit or {}).get("commitId")
+
+
+def _user(identity: dict | None) -> dict:
+    return {
+        "displayName": (identity or {}).get("displayName"),
+        "uniqueName": (identity or {}).get("uniqueName"),
+    }
+
+
+# Fields every trimmed pull request contains.
+_PR_CORE_FIELDS = (
+    "prId",
+    "status",
+    "creationDate",
+    "closedDate",
+    "title",
+    "isDraft",
+    "sourceRefName",
+    "targetRefName",
+)
+
+# Optional fields, selected via the ``include`` argument of _trim_pull_request_response.
+_PR_OPTIONAL_EXTRACTORS = {
+    "description": lambda data: data.get("description") or "",
+    "lastMergeSourceCommit": lambda data: _commit_id(data.get("lastMergeSourceCommit")),
+    "lastMergeTargetCommit": lambda data: _commit_id(data.get("lastMergeTargetCommit")),
+    "mergeStatus": lambda data: data.get("mergeStatus"),
+    "repository": lambda data: (data.get("repository") or {}).get("name"),
+    "project": lambda data: ((data.get("repository") or {}).get("project") or {}).get("name"),
+    "createdBy": lambda data: _user(data.get("createdBy")),
+    "reviewers": lambda data: [_user(reviewer) for reviewer in data.get("reviewers") or []],
+}
+
+# Field sets per tool. Rule: get returns more than list and everything write returns.
+_PR_LIST_INCLUDE = frozenset({"lastMergeSourceCommit", "lastMergeTargetCommit"})
+_PR_WRITE_INCLUDE = frozenset({"description", "repository", "project", "createdBy"})
+_PR_GET_INCLUDE = frozenset(_PR_LIST_INCLUDE | _PR_WRITE_INCLUDE | {"mergeStatus", "reviewers"})
+
+
+def _trim_pull_request_response(data: dict, include: frozenset[str] | set[str] = _PR_WRITE_INCLUDE) -> dict:
+    """Map a raw pull request to the core fields plus the optional fields named in ``include``."""
+    unknown = set(include) - _PR_OPTIONAL_EXTRACTORS.keys()
+    if unknown:
+        raise ValueError(f"Unknown pull request fields: {', '.join(sorted(unknown))}")
+
+    core_values = {
         "prId": data.get("pullRequestId"),
-        "codeReviewId": data.get("codeReviewId"),
-        "repository": (data.get("repository") or {}).get("name"),
         "status": data.get("status"),
-        "createdBy": {
-            "displayName": ((data.get("createdBy") or {}).get("displayName")),
-            "uniqueName": ((data.get("createdBy") or {}).get("uniqueName")),
-        },
         "creationDate": data.get("creationDate"),
         "closedDate": data.get("closedDate"),
         "title": data.get("title"),
         "isDraft": data.get("isDraft"),
         "sourceRefName": data.get("sourceRefName"),
         "targetRefName": data.get("targetRefName"),
-        "project": ((data.get("repository") or {}).get("project") or {}).get("name"),
     }
-    if include_description:
-        result["description"] = data.get("description") or ""
+    result = {name: core_values[name] for name in _PR_CORE_FIELDS}
+    for name, extract in _PR_OPTIONAL_EXTRACTORS.items():
+        if name in include:
+            result[name] = extract(data)
     return result
 
 
@@ -321,11 +369,69 @@ def write_pull_request(
 
 
 @mcp.tool(
+    name="devops_pull_request_list",
+    description=(
+        "List pull requests of a repository, optionally filtered by status, target branch, and a time range. "
+        "'min_time'/'max_time' filter on the creation time by default, or on the closing time when "
+        "'time_range_type' is 'closed' (completed pull requests only). Supports paging with 'top' and 'skip'. "
+        "Use 'devops_pull_request_get' with a returned 'prId' for details."
+    ),
+    annotations={"title": "List pull requests", "readOnlyHint": True, "openWorldHint": False},
+)
+def list_pull_requests(
+    repository_id: Annotated[str, "Repository name or ID."],
+    status: Annotated[
+        str | None,
+        "Filter by status: active, abandoned, completed, all, or notSet. The server default is active.",
+    ] = None,
+    target_ref_name: Annotated[str | None, "Filter by target branch, e.g. 'refs/heads/main'."] = None,
+    min_time: Annotated[
+        str | None, "Lower time bound (ISO 8601 date/time), applied as described by time_range_type."
+    ] = None,
+    max_time: Annotated[
+        str | None, "Upper time bound (ISO 8601 date/time), applied as described by time_range_type."
+    ] = None,
+    time_range_type: Annotated[
+        str,
+        "What min_time/max_time refer to: 'created' (default; creation time) or "
+        "'closed' (closing time; requires status completed).",
+    ] = "created",
+    top: Annotated[int | None, "Maximum number of pull requests to return."] = None,
+    skip: Annotated[int | None, "Number of pull requests to skip (for paging)."] = None,
+) -> object:
+    """List pull requests of a repository as simplified objects (a single API request)."""
+    if status is not None and status not in _PULL_REQUEST_LIST_STATUSES:
+        return {"error": f"status must be one of: {', '.join(_PULL_REQUEST_LIST_STATUSES)}"}
+    if time_range_type not in _PULL_REQUEST_LIST_TIME_RANGES:
+        return {"error": f"time_range_type must be one of: {', '.join(_PULL_REQUEST_LIST_TIME_RANGES)}"}
+    if time_range_type == "closed" and status != "completed":
+        return {"error": "time_range_type 'closed' requires status 'completed'."}
+
+    query = {"api-version": DEVOPS_API_VERSION}
+    optional_params = {
+        "searchCriteria.status": status,
+        "searchCriteria.targetRefName": target_ref_name,
+        "searchCriteria.minTime": min_time,
+        "searchCriteria.maxTime": max_time,
+        # 'created' is the server default, so only 'closed' is sent explicitly.
+        "searchCriteria.queryTimeRangeType": "closed" if time_range_type == "closed" else None,
+        "$top": top,
+        "$skip": skip,
+    }
+    query.update({key: value for key, value in optional_params.items() if value is not None})
+
+    url = f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests?{urlencode(query)}"
+    data = devops_api_get(url)
+
+    return [_trim_pull_request_response(item, _PR_LIST_INCLUDE) for item in data.get("value", [])]
+
+
+@mcp.tool(
     name="devops_pull_request_get",
     description=(
-        "Retrieve a pull request by ID. Use the 'lastMergeTargetCommit' and "
-        "'lastMergeSourceCommit' from the result to obtain changes with "
-        "'devops_repository_diffs_commits' tool."
+        "Retrieve a pull request by ID, including author, reviewers, merge status, closing date, and linked "
+        "work items. Use the 'lastMergeTargetCommit' and 'lastMergeSourceCommit' from the result to obtain "
+        "changes with 'devops_repository_diffs_commits' tool."
     ),
     annotations={"title": "Get pull request", "readOnlyHint": True, "openWorldHint": False},
 )
@@ -337,25 +443,13 @@ def get_pull_request(
     url = f"{devops_api_url}/_apis/git/repositories/{repository_id}/pullRequests/{pull_request_id}"
     data = devops_api_get(url)
 
-    # create a simplified result object
-    result = {
-        "prId": data.get("pullRequestId"),
-        "status": data.get("status"),
-        "creationDate": data.get("creationDate"),
-        "title": data.get("title"),
-        "description": data.get("description"),
-        "sourceRefName": data.get("sourceRefName"),
-        "targetRefName": data.get("targetRefName"),
-        "isDraft": data.get("isDraft"),
-        "lastMergeSourceCommit": data.get("lastMergeSourceCommit", {}).get("commitId"),
-        "lastMergeTargetCommit": data.get("lastMergeTargetCommit", {}).get("commitId"),
-        "workItems": data.get("_links", {}).get("workItems", {}).get("href", {}),
-    }
+    result = _trim_pull_request_response(data, _PR_GET_INCLUDE)
 
     # Fetch work item details if any
+    work_items_url = ((data.get("_links") or {}).get("workItems") or {}).get("href")
     work_items = []
-    if result.get("workItems"):
-        work_item_json = devops_api_get(result["workItems"])
+    if work_items_url:
+        work_item_json = devops_api_get(work_items_url)
         for i in work_item_json.get("value", []):
             work_items.append(fetch_work_item(i.get("url")))
     result["workItems"] = work_items

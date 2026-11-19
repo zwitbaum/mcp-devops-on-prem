@@ -64,6 +64,54 @@ The MCP server can be installed manually in the following AI tools: **VS Code, V
 
 For step-by-step instructions, see [Manual Installation](docs/getting-started.md#manual-installation) in the Getting Started guide.
 
+#### Claude Desktop
+
+1. **Install uv** (one time). uv is the small helper program that starts this MCP server for Claude. You do not need administrator rights and you do not need to install Python: uv downloads Python itself when it is needed.
+   - Windows: open **PowerShell** (Start menu, type `PowerShell`, press Enter), paste the following line and press Enter:
+     ```
+     powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+     ```
+   - macOS / Linux: open a terminal and run `curl -LsSf https://astral.sh/uv/install.sh | sh`.
+2. **Open the Claude Desktop configuration file.** In Claude Desktop, open **Settings** (usually by clicking your name in the lower left corner), go to **Desktop app**, click **Manage** next to **Extensions**, and under **Local MCP servers** click **Edit config**. A folder opens that contains the file `claude_desktop_config.json`.
+3. **Open the file in a text editor** (for example right-click the file → **Open with** → **Notepad**). The first line contains only `{`. Add an empty line below it and paste **one** of the following blocks there, depending on how you log in to Azure DevOps Server. Then replace the example values in quotes with your own (`DEVOPS_API_URL` is the address of your project, e.g. `https://devops.mycompany.com/MyOrg/MyProject`).
+
+   Login with Windows user name and password (NTLM):
+
+   ```json
+     "mcpServers": {
+       "devops-onprem": {
+         "command": "uvx",
+         "args": ["mcp-devops-onpremise@latest"],
+         "env": {
+           "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
+           "DEVOPS_USERNAME": "DOMAIN\\your-username",
+           "DEVOPS_PASSWORD": "your-password"
+         }
+       }
+     },
+   ```
+
+   Login with a personal access token (PAT):
+
+   ```json
+     "mcpServers": {
+       "devops-onprem": {
+         "command": "uvx",
+         "args": ["mcp-devops-onpremise@latest"],
+         "env": {
+           "DEVOPS_API_URL": "https://your-devops-server/your-organization/your-project",
+           "DEVOPS_PAT": "your-personal-access-token"
+         }
+       }
+     },
+   ```
+
+   > **Keep the comma** after the closing `}` of the block you pasted. The file usually contains more settings below it, and the comma separates them. Only if the file consists of nothing but `{}`, remove that comma. If the file already has an `"mcpServers"` section, do not paste a second one: add only the `"devops-onprem": { ... }` part inside the existing section, separated by a comma from the other entries.
+4. **Save the file and restart Claude Desktop completely**: quit it (also via the icon in the system tray next to the clock) and start it again. This restart is required, even if Claude Desktop was open while you installed uv, because only a freshly started Claude Desktop finds `uvx`.
+5. **Check:** the server `devops-onprem` is now listed under **Local MCP servers**. If it shows an error, see [Troubleshooting](docs/getting-started.md#troubleshooting).
+
+More details: [Getting Started](docs/getting-started.md#manual-installation).
+
 ### Configuration
 
 The `DEVOPS_API_URL` must point to your full project URL:
@@ -136,7 +184,8 @@ For permanent installs and release notes, see [Updating](docs/getting-started.md
 
 | Tool | Description | Read-only |
 |---|---|:---:|
-| `devops_pull_request_get` | Retrieve a pull request by ID, including linked work items and commit SHAs for diffing | ✅ |
+| `devops_pull_request_list` | List pull requests of a repository, filtered by status, target branch, and creation and/or closing time, with paging | ✅ |
+| `devops_pull_request_get` | Retrieve a pull request by ID, including author, reviewers, merge status, linked work items, and commit SHAs for diffing | ✅ |
 | `devops_pull_request_write` | Create or update pull requests, update reviewers, or cast your PR vote | ❌ |
 | `devops_pull_request_list_threads` | Returns a hierarchical list of non-deleted comment threads and their text comments | ✅ |
 | `devops_pull_request_list_thread_comments` | List non-deleted text comments in a specific thread | ✅ |

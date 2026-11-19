@@ -31,8 +31,40 @@ startCommand:
 # Static tool list — bypasses Smithery's dynamic scanning, which cannot run
 # this server without the required credentials.
 tools:
+  - name: devops_pull_request_list
+    description: "List pull requests of a repository, optionally filtered by status, target branch, and a time range. 'min_time'/'max_time' filter on the creation time by default, or on the closing time when 'time_range_type' is 'closed' (completed pull requests only). Supports paging with 'top' and 'skip'. Use 'devops_pull_request_get' with a returned 'prId' for details."
+    inputSchema:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          description: Repository name or ID.
+        status:
+          type: string
+          description: "Filter by status: active, abandoned, completed, all, or notSet. The server default is active."
+        target_ref_name:
+          type: string
+          description: "Filter by target branch, e.g. 'refs/heads/main'."
+        min_time:
+          type: string
+          description: Lower time bound (ISO 8601 date/time), applied as described by time_range_type.
+        max_time:
+          type: string
+          description: Upper time bound (ISO 8601 date/time), applied as described by time_range_type.
+        time_range_type:
+          type: string
+          enum: [created, closed]
+          description: "What min_time/max_time refer to: 'created' (default; creation time) or 'closed' (closing time; requires status completed)."
+        top:
+          type: integer
+          description: Maximum number of pull requests to return.
+        skip:
+          type: integer
+          description: Number of pull requests to skip (for paging).
+      required: [repository_id]
+
   - name: devops_pull_request_get
-    description: "Retrieve a pull request by ID. Use the 'lastMergeTargetCommit' and 'lastMergeSourceCommit' from the result to obtain changes with 'devops_repository_diffs_commits' tool."
+    description: "Retrieve a pull request by ID, including author, reviewers, merge status, closing date, and linked work items. Use the 'lastMergeTargetCommit' and 'lastMergeSourceCommit' from the result to obtain changes with 'devops_repository_diffs_commits' tool."
     inputSchema:
       type: object
       properties:

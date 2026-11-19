@@ -91,22 +91,16 @@ class TestGetRepositories:
         assert rsps_lib.calls[0].request.headers.get("Accept") == "application/json"
 
     @rsps_lib.activate
-    def test_non_200_returns_error_json(self, devops_url, token_auth):
-        """A 401 response returns the error JSON body rather than raising an exception.
-
-        This documents current behaviour: devops_api_get calls .json() without
-        raise_for_status, so callers receive the API error payload.
-        """
+    def test_401_raises_authentication_error(self, devops_url, token_auth):
+        """A 401 raises instead of returning the error payload as if it were data."""
         rsps_lib.add(rsps_lib.GET, REPOS_URL, json=REPOSITORIES_ERROR_RESPONSE, status=401)
 
-        result = get_repositories()
-
-        assert "message" in result
-        assert "typeKey" in result
+        with pytest.raises(ValueError, match="Authentication failed.*401"):
+            get_repositories()
 
     @rsps_lib.activate
     def test_404_returns_error_json(self, devops_url, token_auth):
-        """A 404 is treated the same as any other non-200: error JSON is returned."""
+        """Non-401 errors such as 404 still return the error JSON body."""
         rsps_lib.add(rsps_lib.GET, REPOS_URL, json={"message": "Not Found"}, status=404)
 
         result = get_repositories()

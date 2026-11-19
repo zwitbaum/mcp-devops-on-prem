@@ -38,7 +38,7 @@ Every tool is annotated as read-only or as modifying, so Claude asks before it c
 
 ## What it runs, sends and stores
 
-- **Runs:** `uvx mcp-devops-onpremise==2.2.0`, which downloads the pinned package from PyPI on first use and runs it as a local process.
+- **Runs:** `uvx mcp-devops-onpremise==2.3.0`, which downloads the pinned package from PyPI on first use and runs it as a local process.
 - **Sends:** requests only to the Azure DevOps Server URL you configure, authenticated with your credentials. There is no telemetry and no other destination.
 - **Stores:** nothing, except when you ask Claude to download a work item attachment to a folder, which writes that file to your disk.
 

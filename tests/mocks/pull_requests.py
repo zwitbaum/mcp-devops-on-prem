@@ -9,6 +9,13 @@ PULL_REQUEST_RESPONSE = {
     "sourceRefName": "refs/heads/feature/my-feature",
     "targetRefName": "refs/heads/main",
     "isDraft": False,
+    "mergeStatus": "succeeded",
+    "repository": {"name": "MyRepo", "project": {"name": "Project"}},
+    "createdBy": {"displayName": "Alice", "uniqueName": "alice@example.com", "id": "ignored"},
+    "reviewers": [
+        {"displayName": "Bob", "uniqueName": "bob@example.com", "vote": 10, "id": "ignored"},
+        {"displayName": "Carol", "uniqueName": "carol@example.com", "vote": 0, "isRequired": True},
+    ],
     "lastMergeSourceCommit": {"commitId": "a" * 40},
     "lastMergeTargetCommit": {"commitId": "b" * 40},
     "_links": {
@@ -32,11 +39,7 @@ PULL_REQUEST_NO_WORKITEMS_RESPONSE = {
     "_links": {},
 }
 
-WORK_ITEMS_LIST_RESPONSE = {
-    "value": [
-        {"url": "https://devops.example.com/org/project/_apis/wit/workItems/101"}
-    ]
-}
+WORK_ITEMS_LIST_RESPONSE = {"value": [{"url": "https://devops.example.com/org/project/_apis/wit/workItems/101"}]}
 
 WORK_ITEM_RESPONSE = {
     "id": 101,
@@ -131,9 +134,7 @@ SINGLE_THREAD_RESPONSE = {
 
 CREATE_THREAD_RESPONSE = {
     "id": 20,
-    "comments": [
-        {"id": 1, "parentCommentId": 0}
-    ],
+    "comments": [{"id": 1, "parentCommentId": 0}],
 }
 
 REPLY_COMMENT_RESPONSE = {
@@ -149,4 +150,33 @@ UPDATE_THREAD_RESPONSE = {
 UPDATE_COMMENT_RESPONSE = {
     "id": 1,
     "parentCommentId": 0,
+}
+
+
+PULL_REQUESTS_LIST_RESPONSE = {
+    "count": 2,
+    "value": [
+        {
+            "pullRequestId": 42,
+            "status": "completed",
+            "creationDate": "2024-01-01T10:00:00Z",
+            "closedDate": "2024-01-02T10:00:00Z",
+            "title": "Add new feature",
+            "description": "ignored in list output",
+            "sourceRefName": "refs/heads/feature/my-feature",
+            "targetRefName": "refs/heads/main",
+            "isDraft": False,
+            "lastMergeSourceCommit": {"commitId": "a" * 40},
+            "lastMergeTargetCommit": {"commitId": "b" * 40},
+        },
+        {
+            "pullRequestId": 43,
+            "status": "active",
+            "creationDate": "2024-01-03T10:00:00Z",
+            "title": "Draft without merge commits",
+            "sourceRefName": "refs/heads/feature/draft",
+            "targetRefName": "refs/heads/main",
+            "isDraft": True,
+        },
+    ],
 }

@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.3.0] - 2026-11-19
+
+### Added
+- `devops_pull_request_list` tool: list pull requests of a repository, filtered by status, target branch, and a time range, with `top`/`skip` paging. `time_range_type` selects whether `min_time`/`max_time` refer to the creation time (default) or the closing time (`closed`, completed pull requests only)
+
+### Changed
+- `devops_pull_request_get`: now also returns `closedDate`, `mergeStatus`, `repository`, `project`, `createdBy`, and `reviewers` (display name and unique name); `description` is an empty string instead of `null` when the pull request has none
+- `devops_pull_request_write`: the returned pull request no longer contains `codeReviewId`
+- README and Getting Started guide: step-by-step Claude Desktop setup, `uv` installer recommended (Python no longer has to be installed separately), and a note that `DEVOPS_USERNAME` must not be combined with `DEVOPS_PAT`
+
+### Fixed
+- All tools that decode the API response themselves (e.g. `devops_pull_request_get`, `devops_repository_list`): an HTTP 401 (e.g. expired PAT) now raises an authentication error instead of being returned as empty data
+
+---
+
 ## [2.2.0] - 2026-11-11
 
 ### Added
@@ -139,7 +154,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NTLM, PAT, and OAuth Bearer token authentication
 - GitHub Actions CI and PyPI publish workflows
 
-[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/zwitbaum/mcp-devops-on-prem/compare/v2.0.0...v2.0.1

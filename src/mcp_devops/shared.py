@@ -25,8 +25,10 @@ DEVOPS_API_VERSION = "7.1"
 __doc__ = (
     "\n"
     "Available tools:\n"
+    "- devops_pull_request_list: list PRs of a repository, filtered by status, target branch, "
+    "and creation time, with paging\n"
     "- devops_pull_request_get: fetch a PR by ID, returns title, description, "
-    "source/target branch, linked work items, and commit SHAs for diffing\n"
+    "source/target branch, author, reviewers, merge status, linked work items, and commit SHAs for diffing\n"
     "- devops_pull_request_write: create or update PRs, update reviewers, or cast a PR vote\n"
     "- devops_pull_request_create_comment: post a general or inline code comment on a PR\n"
     "- devops_pull_request_update_comment: update an existing PR comment\n"
@@ -149,10 +151,20 @@ def _decode_json_response(response):
     return json.loads(response.content.decode("utf-8-sig"))
 
 
+def _finish_response(response, return_response):
+    """Return the raw response, or decode its JSON. Fail loudly on 401 (bad or expired credentials)."""
+    if return_response:
+        return response
+    if response.status_code == 401:
+        body = response.content.decode("utf-8-sig", errors="replace")[:300]
+        raise ValueError(f"Authentication failed (HTTP 401) for {response.request.method} {response.url}: {body}")
+    return _decode_json_response(response)
+
+
 def devops_api_get(url, return_response=False):
     headers, auth = _get_auth_headers_and_kwargs()
     response = requests.get(url, headers=headers, auth=auth, timeout=DEFAULT_TIMEOUT)
-    return response if return_response else _decode_json_response(response)
+    return _finish_response(response, return_response)
 
 
 def devops_api_post(url, payload, extra_headers=None, return_response=False):
@@ -160,7 +172,7 @@ def devops_api_post(url, payload, extra_headers=None, return_response=False):
     if extra_headers:
         headers.update(extra_headers)
     response = requests.post(url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT)
-    return response if return_response else _decode_json_response(response)
+    return _finish_response(response, return_response)
 
 
 def devops_api_put(url, payload, extra_headers=None, return_response=False):
@@ -168,7 +180,7 @@ def devops_api_put(url, payload, extra_headers=None, return_response=False):
     if extra_headers:
         headers.update(extra_headers)
     response = requests.put(url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT)
-    return response if return_response else _decode_json_response(response)
+    return _finish_response(response, return_response)
 
 
 def devops_api_patch(url, payload, extra_headers=None, return_response=False):
@@ -176,7 +188,7 @@ def devops_api_patch(url, payload, extra_headers=None, return_response=False):
     if extra_headers:
         headers.update(extra_headers)
     response = requests.patch(url, headers=headers, auth=auth, json=payload, timeout=DEFAULT_TIMEOUT)
-    return response if return_response else _decode_json_response(response)
+    return _finish_response(response, return_response)
 
 
 def devops_api_delete(url):
@@ -235,8 +247,10 @@ mcp = FastMCP(
         "Use this server whenever the user wants to work with DevOps pull "
         "requests, repositories, work items (PBIs/bugs), or wiki pages.\n\n"
         "Available tools:\n"
+        "- devops_pull_request_list: list PRs of a repository, filtered by status, "
+        "target branch, and creation time, with paging\n"
         "- devops_pull_request_get: fetch a PR by ID, returns title, description, "
-        "source/target branch, linked work items, and commit SHAs for diffing\n"
+        "source/target branch, author, reviewers, merge status, linked work items, and commit SHAs for diffing\n"
         "- devops_pull_request_write: create or update PRs, update reviewers, "
         "or cast a PR vote\n"
         "- devops_pull_request_list_threads: list a PR's comment threads with their comments\n"

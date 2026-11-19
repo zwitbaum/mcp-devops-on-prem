@@ -52,7 +52,8 @@ Project context for recommenders and repository analysis tools.
   - `devops_repository_item_content`
   - `devops_get_item_content_diff`
 
-- **Pull Requests:** get PRs, create/update PRs, update reviewers, vote, list threads, list thread comments, create comments, reply, update thread, update/delete comments
+- **Pull Requests:** list/get PRs, create/update PRs, update reviewers, vote, list threads, list thread comments, create comments, reply, update thread, update/delete comments
+  - `devops_pull_request_list`
   - `devops_pull_request_get`
   - `devops_pull_request_write`
   - `devops_pull_request_list_threads`

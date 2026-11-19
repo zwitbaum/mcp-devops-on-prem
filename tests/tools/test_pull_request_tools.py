@@ -6,16 +6,23 @@ path only so responses intercepts requests without NTLM negotiation.
 
 import json
 import re
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 import responses as rsps_lib
 
 from mcp_devops.tools.pull_request_tools import (
+    _PR_CORE_FIELDS,
+    _PR_GET_INCLUDE,
+    _PR_LIST_INCLUDE,
+    _PR_WRITE_INCLUDE,
     _ensure_rel_file_path,
+    _trim_pull_request_response,
     create_pull_request_comment,
     delete_pull_request_comment,
     get_pull_request,
     list_pull_request_thread_comments,
+    list_pull_requests,
     list_pull_request_threads,
     reply_pull_request_comment,
     update_pull_request_comment,
@@ -26,6 +33,7 @@ from tests.mocks.pull_requests import (
     CREATE_THREAD_RESPONSE,
     PULL_REQUEST_NO_WORKITEMS_RESPONSE,
     PULL_REQUEST_RESPONSE,
+    PULL_REQUESTS_LIST_RESPONSE,
     REPLY_COMMENT_RESPONSE,
     SINGLE_THREAD_RESPONSE,
     THREADS_RESPONSE,
@@ -37,6 +45,7 @@ from tests.mocks.pull_requests import (
 
 # @mcp.tool() wraps functions as FunctionTool. Use .fn to reach the callable.
 get_pull_request = get_pull_request.fn
+list_pull_requests = list_pull_requests.fn
 list_pull_request_threads = list_pull_request_threads.fn
 list_pull_request_thread_comments = list_pull_request_thread_comments.fn
 create_pull_request_comment = create_pull_request_comment.fn
@@ -61,7 +70,6 @@ CONNECTION_DATA_URL = f"{BASE_URL}/_apis/connectionData?api-version=7.1"
 
 WRITE_PR_RESPONSE = {
     **PULL_REQUEST_RESPONSE,
-    "codeReviewId": 500,
     "repository": {"name": REPO, "project": {"name": "Project"}},
     "createdBy": {"displayName": "Alice", "uniqueName": "alice@example.com"},
 }
@@ -92,6 +100,88 @@ class TestEnsureRelFilePath:
     def test_returns_empty_string_unchanged(self):
         # Empty string is falsy → the condition `file_path and ...` is False, returns as-is.
         assert _ensure_rel_file_path("") == ""
+
+
+# ---------------------------------------------------------------------------
+# _trim_pull_request_response
+# ---------------------------------------------------------------------------
+
+
+class TestTrimPullRequestResponse:
+    def test_core_fields_only_when_include_is_empty(self):
+        result = _trim_pull_request_response(PULL_REQUEST_RESPONSE, frozenset())
+
+        assert list(result) == list(_PR_CORE_FIELDS)
+        assert result["prId"] == 42
+        assert result["title"] == "Add new feature"
+
+    def test_includes_only_requested_optional_fields(self):
+        result = _trim_pull_request_response(PULL_REQUEST_RESPONSE, {"description", "mergeStatus"})
+
+        assert set(result) == set(_PR_CORE_FIELDS) | {"description", "mergeStatus"}
+        assert result["description"] == "This PR adds a new feature."
+        assert result["mergeStatus"] == "succeeded"
+
+    def test_optional_values_are_extracted(self):
+        result = _trim_pull_request_response(
+            PULL_REQUEST_RESPONSE,
+            {
+                "lastMergeSourceCommit",
+                "lastMergeTargetCommit",
+                "repository",
+                "project",
+                "createdBy",
+                "reviewers",
+            },
+        )
+
+        assert result["lastMergeSourceCommit"] == "a" * 40
+        assert result["lastMergeTargetCommit"] == "b" * 40
+        assert result["repository"] == "MyRepo"
+        assert result["project"] == "Project"
+        assert result["createdBy"] == {"displayName": "Alice", "uniqueName": "alice@example.com"}
+        assert result["reviewers"] == [
+            {"displayName": "Bob", "uniqueName": "bob@example.com"},
+            {"displayName": "Carol", "uniqueName": "carol@example.com"},
+        ]
+
+    def test_missing_optional_data_is_null_safe(self):
+        result = _trim_pull_request_response({"description": None, "lastMergeSourceCommit": None}, _PR_GET_INCLUDE)
+
+        assert result["description"] == ""
+        assert result["lastMergeSourceCommit"] is None
+        assert result["lastMergeTargetCommit"] is None
+        assert result["repository"] is None
+        assert result["project"] is None
+        assert result["createdBy"] == {"displayName": None, "uniqueName": None}
+        assert result["reviewers"] == []
+
+    def test_reviewer_without_identity_fields_is_null_safe(self):
+        result = _trim_pull_request_response({"reviewers": [None, {}]}, {"reviewers"})
+
+        assert result["reviewers"] == [{"displayName": None, "uniqueName": None}] * 2
+
+    def test_default_include_matches_write_output(self):
+        assert _trim_pull_request_response(PULL_REQUEST_RESPONSE) == _trim_pull_request_response(
+            PULL_REQUEST_RESPONSE, _PR_WRITE_INCLUDE
+        )
+
+    def test_unknown_field_raises(self):
+        with pytest.raises(ValueError, match="Unknown pull request fields: bogus, other"):
+            _trim_pull_request_response(PULL_REQUEST_RESPONSE, {"bogus", "other", "description"})
+
+    def test_get_returns_more_than_list_and_everything_write_returns(self):
+        list_fields = set(_PR_CORE_FIELDS) | _PR_LIST_INCLUDE
+        write_fields = set(_PR_CORE_FIELDS) | _PR_WRITE_INCLUDE
+        get_fields = set(_PR_CORE_FIELDS) | _PR_GET_INCLUDE
+
+        assert list_fields < get_fields
+        assert write_fields <= get_fields
+
+    def test_list_does_not_return_created_by(self):
+        assert "createdBy" not in _PR_LIST_INCLUDE
+        assert "reviewers" not in _PR_LIST_INCLUDE
+        assert "reviewers" not in _PR_WRITE_INCLUDE
 
 
 # ---------------------------------------------------------------------------
@@ -138,6 +228,23 @@ class TestGetPullRequest:
         assert result["workItems"][0]["id"] == 101
 
     @rsps_lib.activate
+    def test_returns_all_fields_of_write_and_list(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, PR_URL, json=PULL_REQUEST_RESPONSE, status=200)
+        rsps_lib.add(rsps_lib.GET, re.compile(r".*workitems.*"), json=WORK_ITEMS_LIST_RESPONSE, status=200)
+        rsps_lib.add(rsps_lib.GET, re.compile(r".*wit/workItems.*"), json=WORK_ITEM_RESPONSE, status=200)
+
+        result = get_pull_request(REPO, PR_ID)
+
+        assert set(result) == set(_PR_CORE_FIELDS) | _PR_GET_INCLUDE | {"workItems"}
+        assert result["description"] == "This PR adds a new feature."
+        assert result["mergeStatus"] == "succeeded"
+        assert result["repository"] == "MyRepo"
+        assert result["project"] == "Project"
+        assert result["createdBy"] == {"displayName": "Alice", "uniqueName": "alice@example.com"}
+        assert result["closedDate"] is None
+        assert [r["displayName"] for r in result["reviewers"]] == ["Bob", "Carol"]
+
+    @rsps_lib.activate
     def test_returns_empty_work_items_when_no_link(self, devops_url, token_auth):
         no_wi_url = f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests/99"
         rsps_lib.add(rsps_lib.GET, no_wi_url, json=PULL_REQUEST_NO_WORKITEMS_RESPONSE, status=200)
@@ -146,6 +253,171 @@ class TestGetPullRequest:
 
         assert result["workItems"] == []
         assert len(rsps_lib.calls) == 1  # No additional fetches
+
+
+# ---------------------------------------------------------------------------
+# list_pull_requests
+# ---------------------------------------------------------------------------
+
+LIST_PRS_URL = re.compile(re.escape(f"{BASE_URL}/_apis/git/repositories/{REPO}/pullRequests") + r"\?.*")
+
+
+def _query_of(call):
+    return parse_qs(urlsplit(call.request.url).query)
+
+
+class TestListPullRequests:
+    @rsps_lib.activate
+    def test_default_request_only_sends_api_version(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, LIST_PRS_URL, json={"value": []}, status=200)
+
+        result = list_pull_requests(REPO)
+
+        assert result == []
+        assert _query_of(rsps_lib.calls[0]) == {"api-version": ["7.1"]}
+
+    @rsps_lib.activate
+    def test_maps_response_to_simplified_shape(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, LIST_PRS_URL, json=PULL_REQUESTS_LIST_RESPONSE, status=200)
+
+        result = list_pull_requests(REPO)
+
+        assert len(result) == 2
+        assert result[0] == {
+            "prId": 42,
+            "status": "completed",
+            "creationDate": "2024-01-01T10:00:00Z",
+            "closedDate": "2024-01-02T10:00:00Z",
+            "title": "Add new feature",
+            "sourceRefName": "refs/heads/feature/my-feature",
+            "targetRefName": "refs/heads/main",
+            "isDraft": False,
+            "lastMergeSourceCommit": "a" * 40,
+            "lastMergeTargetCommit": "b" * 40,
+        }
+
+    @rsps_lib.activate
+    def test_missing_optional_fields_become_none(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, LIST_PRS_URL, json=PULL_REQUESTS_LIST_RESPONSE, status=200)
+
+        result = list_pull_requests(REPO)
+
+        assert result[1]["prId"] == 43
+        assert result[1]["closedDate"] is None
+        assert result[1]["lastMergeSourceCommit"] is None
+        assert result[1]["lastMergeTargetCommit"] is None
+        assert result[1]["isDraft"] is True
+
+    @rsps_lib.activate
+    def test_all_filters_are_sent_as_query_parameters(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, LIST_PRS_URL, json={"value": []}, status=200)
+
+        list_pull_requests(
+            REPO,
+            status="completed",
+            target_ref_name="refs/heads/release/v1",
+            min_time="2024-01-01T00:00:00Z",
+            max_time="2024-02-01T00:00:00Z",
+            top=5,
+            skip=10,
+        )
+
+        assert _query_of(rsps_lib.calls[0]) == {
+            "api-version": ["7.1"],
+            "searchCriteria.status": ["completed"],
+            "searchCriteria.targetRefName": ["refs/heads/release/v1"],
+            "searchCriteria.minTime": ["2024-01-01T00:00:00Z"],
+            "searchCriteria.maxTime": ["2024-02-01T00:00:00Z"],
+            "$top": ["5"],
+            "$skip": ["10"],
+        }
+
+    @rsps_lib.activate
+    def test_zero_top_and_skip_are_still_sent(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, LIST_PRS_URL, json={"value": []}, status=200)
+
+        list_pull_requests(REPO, top=0, skip=0)
+
+        query = _query_of(rsps_lib.calls[0])
+        assert query["$top"] == ["0"]
+        assert query["$skip"] == ["0"]
+
+    @rsps_lib.activate
+    def test_returns_empty_list_when_value_missing(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, LIST_PRS_URL, json={}, status=200)
+
+        assert list_pull_requests(REPO) == []
+
+    @rsps_lib.activate
+    def test_invalid_status_returns_error_without_request(self, devops_url, token_auth):
+        result = list_pull_requests(REPO, status="merged")
+
+        assert "error" in result
+        assert "active" in result["error"]
+        assert len(rsps_lib.calls) == 0
+
+    @pytest.mark.parametrize("status", ["active", "abandoned", "completed", "all", "notSet"])
+    @rsps_lib.activate
+    def test_accepts_every_documented_status(self, devops_url, token_auth, status):
+        rsps_lib.add(rsps_lib.GET, LIST_PRS_URL, json={"value": []}, status=200)
+
+        assert list_pull_requests(REPO, status=status) == []
+        assert _query_of(rsps_lib.calls[0])["searchCriteria.status"] == [status]
+
+
+class TestListPullRequestsTimeRange:
+    @rsps_lib.activate
+    def test_created_type_does_not_send_query_time_range_type(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, LIST_PRS_URL, json={"value": []}, status=200)
+
+        list_pull_requests(REPO, min_time="2026-07-10", time_range_type="created")
+
+        assert "searchCriteria.queryTimeRangeType" not in _query_of(rsps_lib.calls[0])
+
+    @rsps_lib.activate
+    def test_closed_type_sends_query_time_range_type(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, LIST_PRS_URL, json={"value": []}, status=200)
+
+        list_pull_requests(REPO, status="completed", min_time="2026-07-10", time_range_type="closed")
+
+        query = _query_of(rsps_lib.calls[0])
+        assert query["searchCriteria.queryTimeRangeType"] == ["closed"]
+        assert query["searchCriteria.minTime"] == ["2026-07-10"]
+
+    @rsps_lib.activate
+    @pytest.mark.parametrize("status", [None, "active", "all"])
+    def test_closed_type_requires_completed_status(self, devops_url, token_auth, status):
+        result = list_pull_requests(REPO, status=status, time_range_type="closed")
+
+        assert "requires status 'completed'" in result["error"]
+        assert len(rsps_lib.calls) == 0
+
+    @rsps_lib.activate
+    def test_invalid_time_range_type_returns_error(self, devops_url, token_auth):
+        result = list_pull_requests(REPO, time_range_type="modified")
+
+        assert "created, closed" in result["error"]
+        assert len(rsps_lib.calls) == 0
+
+    @rsps_lib.activate
+    def test_makes_exactly_one_request_with_all_filters(self, devops_url, token_auth):
+        rsps_lib.add(rsps_lib.GET, LIST_PRS_URL, json=PULL_REQUESTS_LIST_RESPONSE, status=200)
+
+        result = list_pull_requests(
+            REPO,
+            status="completed",
+            min_time="2026-07-10",
+            max_time="2026-08-20",
+            time_range_type="closed",
+            top=1,
+            skip=1,
+        )
+
+        assert len(rsps_lib.calls) == 1
+        assert len(result) == 2  # the server decides the page; results are passed through unchanged
+        query = _query_of(rsps_lib.calls[0])
+        assert query["$top"] == ["1"]
+        assert query["$skip"] == ["1"]
 
 
 # ---------------------------------------------------------------------------
@@ -202,7 +474,9 @@ class TestWritePullRequest:
         ],
     )
     @rsps_lib.activate
-    def test_create_validates_each_required_field_before_calling_api(self, devops_url, token_auth, kwargs, expected_error):
+    def test_create_validates_each_required_field_before_calling_api(
+        self, devops_url, token_auth, kwargs, expected_error
+    ):
         result = write_pull_request("create", **kwargs)
 
         assert result == {"error": expected_error}
@@ -287,7 +561,10 @@ class TestWritePullRequest:
         [
             ({}, "repository_id is required for update"),
             ({"repository_id": REPO}, "pull_request_id is required for update"),
-            ({"repository_id": REPO, "pull_request_id": PR_ID, "status": "Completed"}, "status must be Active or Abandoned"),
+            (
+                {"repository_id": REPO, "pull_request_id": PR_ID, "status": "Completed"},
+                "status must be Active or Abandoned",
+            ),
             (
                 {"repository_id": REPO, "pull_request_id": PR_ID, "auto_complete": True, "merge_strategy": "Bad"},
                 "merge_strategy must be NoFastForward, Squash, Rebase, or RebaseMerge",
@@ -472,7 +749,10 @@ class TestWritePullRequest:
         [
             ({}, "repository_id is required for vote"),
             ({"repository_id": REPO}, "pull_request_id is required for vote"),
-            ({"repository_id": REPO, "pull_request_id": PR_ID}, "vote must be Approved, ApprovedWithSuggestions, NoVote, WaitingForAuthor, or Rejected"),
+            (
+                {"repository_id": REPO, "pull_request_id": PR_ID},
+                "vote must be Approved, ApprovedWithSuggestions, NoVote, WaitingForAuthor, or Rejected",
+            ),
         ],
     )
     @rsps_lib.activate
@@ -766,6 +1046,7 @@ class TestCreatePullRequestComment:
         create_pull_request_comment(REPO, PR_ID, "My comment text")
 
         import json
+
         body = json.loads(rsps_lib.calls[0].request.body)
         assert body["comments"][0]["content"] == "My comment text"
         assert body["comments"][0]["commentType"] == 1
@@ -777,6 +1058,7 @@ class TestCreatePullRequestComment:
         create_pull_request_comment(REPO, PR_ID, "Inline!", file_path="src/foo.cs", line_number=10)
 
         import json
+
         body = json.loads(rsps_lib.calls[0].request.body)
         assert "threadContext" in body
         assert body["threadContext"]["filePath"] == "/src/foo.cs"
@@ -789,6 +1071,7 @@ class TestCreatePullRequestComment:
         create_pull_request_comment(REPO, PR_ID, "Inline!", file_path="/src/foo.cs", line_number=5)
 
         import json
+
         body = json.loads(rsps_lib.calls[0].request.body)
         assert body["threadContext"]["filePath"] == "/src/foo.cs"
 
@@ -799,6 +1082,7 @@ class TestCreatePullRequestComment:
         create_pull_request_comment(REPO, PR_ID, "No line", file_path="src/foo.cs", line_number=0)
 
         import json
+
         body = json.loads(rsps_lib.calls[0].request.body)
         assert "threadContext" not in body
 
@@ -809,6 +1093,7 @@ class TestCreatePullRequestComment:
         create_pull_request_comment(REPO, PR_ID, "General comment")
 
         import json
+
         body = json.loads(rsps_lib.calls[0].request.body)
         assert "threadContext" not in body
 
@@ -855,6 +1140,7 @@ class TestReplyPullRequestComment:
         reply_pull_request_comment(REPO, PR_ID, THREAD_ID, "Reply text")
 
         import json
+
         body = json.loads(rsps_lib.calls[0].request.body)
         assert body["content"] == "Reply text"
         assert body["commentType"] == 1
@@ -882,6 +1168,7 @@ class TestUpdatePullRequestThread:
         update_pull_request_thread(REPO, PR_ID, THREAD_ID, status=2)
 
         import json
+
         body = json.loads(rsps_lib.calls[0].request.body)
         assert body["status"] == 2
 
@@ -920,6 +1207,7 @@ class TestUpdatePullRequestComment:
         update_pull_request_comment(REPO, PR_ID, THREAD_ID, "Updated text", COMMENT_ID, 0)
 
         import json
+
         body = json.loads(rsps_lib.calls[0].request.body)
         assert body["content"] == "Updated text"
         assert body["parentCommentId"] == 0
